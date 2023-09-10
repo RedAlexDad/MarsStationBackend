@@ -1,7 +1,21 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Заказ №{{ data.id }}{% endblock %}
+{% block title %}Информация о географического объекта {{ data.order.name }}{% endblock %}
 
 {% block content %}
-    <div class="order-text">Информация о заказе №{{ data.id }}</div>
+    <div class="grid-item">
+        <div class="card">
+            <div class="card-content">
+                <div class="text-content">
+                    <p>Информация о географическом объекте {{ data.order.name }}</p>
+                    <p>Риск приземления: {{ data.order.landing_risk }}%</p>
+                    <p>Статус исследования: {{ data.order.research_status }}</p>
+                    <p>ID астронавта: {{ data.order.ID_astronaut }}</p>
+                    <p>ID космического корабля: {{ data.order.ID_spaceship }}</p>
+                </div>
+                <img src="{% static 'images/geograf_object/'|add:data.order.name|add:'.jpg' %}" class="card-image" style="width: 40%">
+            </div>
+        </div>
+    </div>
 {% endblock %}

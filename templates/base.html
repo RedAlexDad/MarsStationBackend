@@ -5,17 +5,34 @@
 <!doctype html>
 <html lang="en" class="h-100">
     <head>
-      <meta charset="utf-8">
+        <meta charset="utf-8">
         <title>{% block title %}{% endblock %}</title>
-        <link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '/css/examp.css' %}">
     </head>
     <body>
-        Hello BMSTU students!
+        <div class="background-image">
+            <img src="{% static 'images/rocket.jpg' %}" alt="Фоновое изображение">
+        </div>
+        <h1 style="color: #cccccc"> Выберите географические объекты для приземления и расширения станций </h1>
+        {# Наследование шаблонизации #}
         {% block content %}{% endblock %}
-        <form action="sendText" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input name="text" type="text"><br><br>
-                <input type="submit" value="Submit">
+{#        <form action="sendText" method="post" enctype="multipart/form-data">#}
+{#            {% csrf_token %}#}
+{#            <h1 style="color: #cccccc">Воспользуйтесь поиском</h1>#}
+{#            <input name="text" type="text"><br><br>#}
+{#            <input type="submit" value="Submit">#}
+{#        </form>#}
+        <form method="GET" action="{% url 'filter' %}">
+            <input type="text" name="filter_keyword" placeholder="Фильтр по наименованию или цене">
+            <select name="filter_field">
+                <option value="name">Название</option>
+                <option value="landing_risk">Риск приземления</option>
+                <option value="research_status">Статус исследования</option>
+                <option value="ID_astronaut">ID космонавта</option>
+                <option value="ID_spaceship">ID космического корабля</option>
+            </select>
+            <button type="submit">Применить фильтр</button>
         </form>
     </body>
 </html>
+

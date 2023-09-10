@@ -30,4 +30,5 @@ urlpatterns = [
     path('', views.GetOrders),
     path('order/<int:id>/', views.GetOrder, name='order_url'),
     path('sendText', views.sendText, name='sendText'),
+    path('filter/', views.filter, name='filter'),
 ]
