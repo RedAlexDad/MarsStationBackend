@@ -1,14 +1,21 @@
 {# Наследование шаблонов #}
 {# Наследование шаблонов позволяет создать основной шаблон, который содержит общие элементы, а частные места будут переопределять наследники. #}
 {# Места, которые могут быть переопределены помечаются тегами {% block %} #}
+{% load static %}
 <!doctype html>
 <html lang="en" class="h-100">
-<head>
-  <meta charset="utf-8">
-    <title>{% block title %}{% endblock %}</title>
-</head>
-<body>
-    Hello BMSTU students!
-    {% block content %}{% endblock %}
-</body>
+    <head>
+      <meta charset="utf-8">
+        <title>{% block title %}{% endblock %}</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
+    </head>
+    <body>
+        Hello BMSTU students!
+        {% block content %}{% endblock %}
+        <form action="sendText" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="text" type="text"><br><br>
+                <input type="submit" value="Submit">
+        </form>
+    </body>
 </html>

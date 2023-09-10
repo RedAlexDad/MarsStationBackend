@@ -3,38 +3,31 @@
 <head>
     <meta charset="utf-8">
     <title>BMSTU</title>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
 </head>
-<body>
-Hello BMSTU students!
-{# Шаблонизация #}
-{# Today is {{ current_date }} #}
-{# Или так с вложенным полям #}
-Today is {{ data.current_date }}
-{# Теги, которых можем пользоваться для логических или циклических условиях #}
-{# В теге if можно использовать: #}
-{# and, or, not, операторы сравнения, in (проверка что значение существует в списке) #}
-<ul>
-    {% for var in data.list %}
-        <li>We like {{ var }}</li>
-    {% endfor %}
-</ul>
-<ul>
-    {% for var in data.list %}
-        {% if var == 'python' %}
-            <li>We like {{ var }}</li>
-        {% elif var == 'django' %}
-            <li>We like {{ var }} a lot!</li>
-        {% else %}
-            <li>We do not like {{ var }}</li>
-        {% endif %}
-    {% endfor %}
-</ul>
-<form action="sendText" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input name="text" type="text"><br><br>
-        <input type="submit" value="Submit">
-</form>
-</body>
+    <body>
+        Hello BMSTU students!
+        {# Шаблонизация #}
+        {# Today is {{ current_date }} #}
+        {# Или так с вложенным полям #}
+        Today is {{ data.current_date }}
+        {# Теги, которых можем пользоваться для логических или циклических условиях #}
+        {# В теге if можно использовать: #}
+        {# and, or, not, операторы сравнения, in (проверка что значение существует в списке) #}
+        <ul>
+            {% for var in data.list %}
+                <li>We like {{ var }}</li>
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for var in data.list %}
+                {% if var == 'python' %}
+                    <li>We like {{ var }}</li>
+                {% elif var == 'django' %}
+                    <li>We like {{ var }} a lot!</li>
+                {% else %}
+                    <li>We do not like {{ var }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </body>
 </html>
