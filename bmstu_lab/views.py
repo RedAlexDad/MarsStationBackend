@@ -4,37 +4,20 @@ from django.shortcuts import render, redirect
 from datetime import date
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
+import json
 
-from .models import GeograficObject
-
-database = [
-    {'id': 1, 'name': 'Копрат',  'landing_risk': 10, 'research_status': 'Не изучено', 'ID_astronaut': 0, 'ID_spaceship': 0},
-    {'id': 2, 'name': 'Титона',  'landing_risk': 80, 'research_status': 'Изучено', 'ID_astronaut': 2, 'ID_spaceship': 0},
-    {'id': 3, 'name': 'Фарсида', 'landing_risk': 50, 'research_status': 'Не изучено', 'ID_astronaut': 1, 'ID_spaceship': 1},
-    {'id': 4, 'name': 'Ксанфа',  'landing_risk': 75, 'research_status': 'Не изучено', 'ID_astronaut': 4, 'ID_spaceship': 1},
-    {'id': 5, 'name': 'Мелас',   'landing_risk': 25, 'research_status': 'Изучено', 'ID_astronaut': 3, 'ID_spaceship': 1}
-]
+from .models import geografic_object
 
 def GetGeograficObjects(request):
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),
-        'GeograficObject': database
+        'GeograficObject': geografic_object.objects.all()
     }})
 
 def GetGeograficObject(request, id):
-    # Найдем объект в списке по 'id'
-    GeograficObject = None
-    for obj in database:
-        if obj['id'] == id:
-            GeograficObject = obj
-            break
-
-    if GeograficObject is None:
-        raise Http404("Объект не найден")
-
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
-        'GeograficObject': GeograficObject
+        'GeograficObject': geografic_object.objects.filter(id=id)[0]
     }})
 
 def filter(request):
@@ -53,6 +36,19 @@ def filter(request):
 
     # Получить список услуг из базы данных
     filtered_services = []
+
+    database = geografic_object.objects.all().values('name', 'type_locality', 'describe')
+    json_data = json.dumps(list(database))
+    decoded_data = json_data['name'].decode('unicode-escape')
+    parsed_data = json.loads(decoded_data)
+
+    result = []
+    for item in parsed_data:
+        result.append({
+            'name': item['name'],
+            'type_locality': item['type_locality'],
+            'describe': item['describe']
+        })
 
     if filter_field == 'name':
         filtered_services = [service for service in database if filter_keyword.lower() in service['name'].lower()]
