@@ -27,8 +27,7 @@ from bmstu_lab import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('hello/', views.hello),
-    path('', views.GetOrders),
-    path('order/<int:id>/', views.GetOrder, name='order_url'),
-    path('sendText', views.sendText, name='sendText'),
+    path('', views.GetGeograficObjects),
+    path('geografic_object/<int:id>/', views.GetGeograficObject, name='geografic_object_url'),
     path('filter/', views.filter, name='filter'),
 ]

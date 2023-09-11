@@ -345,9 +345,10 @@ def hello(request):
 ```
 
 `views.py`
+
 ```python
 def GetOrders(request):
-    return render(request, 'orders.html', {'data' : {
+    return render(request, 'GeograficObjects.html', {'data': {
         'current_date': date.today(),
         'orders': [
             {'title': 'Книга с картинками', 'id': 1},
@@ -385,9 +386,10 @@ urlpatterns = [
 ```
 
 `views.py`
+
 ```python
 def GetOrder(request, id):
-    return render(request, 'order.html', {'data' : {
+    return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
         'id': id
     }})

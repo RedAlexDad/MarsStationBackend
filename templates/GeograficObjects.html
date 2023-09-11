@@ -5,11 +5,11 @@
 
 {% block content %}
     <div class="grid-container">
-        {% for order in data.orders %}
+        {% for GeograficObject in data.GeograficObject %}
             <div class="grid-item">
-                <a href="{% url 'order_url' order.id %}">
-                    <img src="{% static 'images/geograf_object/'|add:order.name|add:'.jpg' %}" style="width: 100%; height: 50%;">
-                    <p style="font-size: 20px">{{ order.name }}</p>
+                <a href="{% url 'geografic_object_url' GeograficObject.id %}">
+                    <img src="{% static 'images/geograf_object/'|add:GeograficObject.name|add:'.jpg' %}" style="width: 100%; height: 50%;">
+                    <p style="font-size: 20px">{{ GeograficObject.name }}</p>
                 </a>
             </div>
         {% empty %}

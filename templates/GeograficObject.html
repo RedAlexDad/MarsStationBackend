@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Информация о географического объекта {{ data.GeograficObject.name }}{% endblock %}
+
+{% block content %}
+    <div class="grid-item">
+        <div class="card">
+            <div class="card-content">
+                <div class="text-content">
+                    <p>Информация о географическом объекте {{ data.GeograficObject.name }}</p>
+                    <p>Риск приземления: {{ data.GeograficObject.landing_risk }}%</p>
+                    <p>Статус исследования: {{ data.GeograficObject.research_status }}</p>
+                    <p>ID астронавта: {{ data.GeograficObject.ID_astronaut }}</p>
+                    <p>ID космического корабля: {{ data.GeograficObject.ID_spaceship }}</p>
+                </div>
+                <img src="{% static 'images/geograf_object/'|add:data.GeograficObject.name|add:'.jpg' %}" class="card-image" style="width: 40%">
+            </div>
+        </div>
+    </div>
+{% endblock %}
