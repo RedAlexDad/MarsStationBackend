@@ -9,11 +9,9 @@
             <div class="card">
                 <div class="card-content">
                     <div class="text-content">
-                    <p>Информация о географическом объекте {{ data.name }}<p>
-                    <p>Риск приземления: {{ data.landing_risk }}%</p>
-                    <p>Статус исследования: {{ data.research_status }}</p>
-                    <p>ID астронавта: {{ data.ID_astronaut }}</p>
-                    <p>ID космического корабля: {{ data.ID_spaceship }}</p>
+                    <p>Информация о географическом объекте "{{ data.name }}"<p>
+                    <p>Тип местности: {{ data.type_locality }}</p>
+                    <p>Описание: {{ data.describe }}</p>
                     </div>
                 <img src="{% static 'images/geograf_object/'|add:data.name|add:'.jpg' %}" class="card-image" style="width: 40%">
                 </div>

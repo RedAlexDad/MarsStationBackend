@@ -37,18 +37,18 @@ def filter(request):
     # Получить список услуг из базы данных
     filtered_services = []
 
-    database = geografic_object.objects.all().values('name', 'type_locality', 'describe')
-    json_data = json.dumps(list(database))
-    decoded_data = json_data['name'].decode('unicode-escape')
-    parsed_data = json.loads(decoded_data)
+    DB = geografic_object.objects.all().values('id', 'name', 'type_locality', 'describe')
 
-    result = []
-    for item in parsed_data:
-        result.append({
-            'name': item['name'],
-            'type_locality': item['type_locality'],
-            'describe': item['describe']
-        })
+    database = []
+    # Пройти по каждому объекту и создать словарь с необходимыми значениями
+    for obj in DB:
+        data = {
+            'id': obj['id'],
+            'name': obj['name'],
+            'type_locality': obj['type_locality'],
+            'describe': obj['describe'],
+        }
+        database.append(data)
 
     if filter_field == 'name':
         filtered_services = [service for service in database if filter_keyword.lower() in service['name'].lower()]
