@@ -6,18 +6,18 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 import json
 
-from .models import geografic_object
+from .models import GeograficObject, Location, Transport, HistoryMovement
 
 def GetGeograficObjects(request):
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),
-        'GeograficObject': geografic_object.objects.all()
+        'GeograficObject': GeograficObject.objects.all()
     }})
 
 def GetGeograficObject(request, id):
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
-        'GeograficObject': geografic_object.objects.filter(id=id)[0]
+        'GeograficObject': GeograficObject.objects.filter(id=id)[0]
     }})
 
 def filter(request):
@@ -37,30 +37,31 @@ def filter(request):
     # Получить список услуг из базы данных
     filtered_services = []
 
-    DB = geografic_object.objects.all().values('id', 'name', 'type_locality', 'describe')
+    DB = GeograficObject.objects.all()
 
     database = []
     # Пройти по каждому объекту и создать словарь с необходимыми значениями
     for obj in DB:
         data = {
-            'id': obj['id'],
-            'name': obj['name'],
-            'type_locality': obj['type_locality'],
-            'describe': obj['describe'],
+            'id': obj.id,
+            'feature': obj.feature,
+            'type': obj.type,
+            'size': obj.size,
+            'named_in_year': obj.named_in_year,
+            'named_for': obj.named_for,
         }
         database.append(data)
 
-    if filter_field == 'name':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['name'].lower()]
-    elif filter_field == 'landing_risk':
-        filtered_services = [service for service in database if service['landing_risk'] == int(filter_keyword)]
-    elif filter_field == 'research_status':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['research_status']]
-    elif filter_field == 'ID_astronaut':
-        filtered_services = [service for service in database if service['ID_astronaut'] == int(filter_keyword)]
-    elif filter_field == 'ID_spaceship':
-        filtered_services = [service for service in database if service['ID_spaceship'] == int(filter_keyword)]
-
+    if filter_field == 'feature':
+        filtered_services = [service for service in database if filter_keyword.lower() in service['feature'].lower()]
+    if filter_field == 'type':
+        filtered_services = [service for service in database if filter_keyword.lower() in service['type'].lower()]
+    elif filter_field == 'size':
+        filtered_services = [service for service in database if service['size'] == int(filter_keyword)]
+    elif filter_field == 'named_in_year':
+        filtered_services = [service for service in database if service['named_in_year'] == int(filter_keyword)]
+    elif filter_field == 'named_for':
+        filtered_services = [service for service in database if filter_keyword.lower() in service['named_for'].lower()]
     else:
         pass
 
