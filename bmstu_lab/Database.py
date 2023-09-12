@@ -1,4 +1,5 @@
 import psycopg2
+from prettytable import PrettyTable
 
 class Database():
     # Подключение к БД
@@ -6,11 +7,12 @@ class Database():
         try:
             # Подключение к базе данных
             self.connection = psycopg2.connect(
-                host=5432,
-                user='postgresql',
-                password='postgresql',
+                # connect_timeout=1,
+                host='localhost',
+                port=5432,
+                user='postgres',
+                password='postgres',
                 database='web_mars',
-                connect_timeout=1
             )
 
             print("[INFO] Успешное подключение к базе данных")
@@ -22,12 +24,7 @@ class Database():
     def drop_table(self):
         try:
             with self.connection.cursor() as cursor:
-                cursor.execute("""
-                DROP TABLE geografic_object CASCADE;
-                DROP TABLE transport CASCADE;
-                DROP TABLE location CASCADE;
-                DROP TABLE history_movement CASCADE;
-                """)
+                cursor.execute("""DROP TABLE geografic_object, transport, location, history_movement CASCADE;""")
 
             # Подтверждение изменений
             self.connection.commit()
@@ -40,59 +37,63 @@ class Database():
     def create_table(self):
         try:
             with self.connection.cursor() as cursor:
-                cursor.execute("""                                      
+                cursor.execute("""         
+                    -- Географические объекты               
                     CREATE TABLE geografic_object (
                         id SERIAL PRIMARY KEY,
-                        name VARCHAR,
-                        type_locality VARCHAR,
-                        describe VARCHAR
+                        feature VARCHAR NOT NULL,
+                        type VARCHAR NOT NULL,
+                        size INT NOT NULL,
+                        named_in_year INT NOT NULL,
+                        named_for VARCHAR NOT NULL
                     );
-
+                    -- Транспортом могжет быть: посадочные, марсоходы, марсолеты и т.д.
                     CREATE TABLE transport (
                         id SERIAL PRIMARY KEY,
-                        name VARCHAR,
-                        type_transport VARCHAR,
-                        feature VARCHAR,
-                        describe VARCHAR
+                        name VARCHAR NOT NULL,
+                        type_transport VARCHAR NOT NULL,
+                        feature VARCHAR NULL,
+                        describe VARCHAR NULL
                     );
-
+                    -- Точные местоположения
                     CREATE TABLE location (
                         id SERIAL PRIMARY KEY,
-                        id_geografic_object INT,
-                        id_transport INT,
-                        date_arrival DATE,
-                        location VARCHAR,
-                        describe VARCHAR
+                        id_geografic_object INT NOT NULL,
+                        id_transport INT NOT NULL,
+                        -- Долгота, широта, высота
+                        location VARCHAR NOT NULL,
+                        describe VARCHAR NULL
                     );
-
+                    -- История передвижения
                     CREATE TABLE history_movement (
                         id SERIAL PRIMARY KEY,
-                        id_begin_location INT,
-                        id_end_location INT,
-                        begin_data_movement DATE,
-                        end_data_movement DATE,
-                        distance_traveled FLOAT,
-                        purpose VARCHAR
+                        id_begin_location INT NOT NULL,
+                        id_end_location INT NOT NULL,
+                        begin_data_movement DATE NOT NULL,
+                        end_data_movement DATE NOT NULL,
+                        distance_traveled FLOAT NOT NULL,
+                        purpose VARCHAR NOT NULL,
+                        results VARCHAR NOT NULL
                     );
-
-
+                    
+                    
                                             -- СВЯЗЫВАНИЕ БД ВНЕШНИМИ КЛЮЧАМИ --
-                    ALTER TABLE geografic_object
-                    ADD CONSTRAINT FR_geografic_object_location
-                        FOREIGN KEY (id) REFERENCES location (id);
-
-                    ALTER TABLE transport
-                    ADD CONSTRAINT FR_transport_location
-                        FOREIGN KEY (id) REFERENCES location (id);
-
-                    -- [2023-09-11 23:59:57] [42830] ОШИБКА: в целевой внешней таблице "history_movement" нет ограничения уникальности, соответствующего данным ключам
-                    -- ALTER TABLE location
-                    -- ADD CONSTRAINT FR_location_history_movement
-                    -- 	FOREIGN KEY (id_transport) REFERENCES history_movement (id_begin_location, id_end_location);
-
+                    
+                    ALTER TABLE location
+                    ADD CONSTRAINT FR_location_geografic_object
+                        FOREIGN KEY (id_geografic_object) REFERENCES geografic_object (id);
+                    
+                    ALTER TABLE location
+                    ADD CONSTRAINT FR_location_transport
+                        FOREIGN KEY (id_transport) REFERENCES transport (id);
+                    
                     ALTER TABLE history_movement
-                    ADD CONSTRAINT unique_movement_locations
-                        UNIQUE (id_begin_location, id_end_location);
+                    ADD CONSTRAINT FR_history_movement_begin_location
+                        FOREIGN KEY (id_begin_location) REFERENCES location (id);
+                    
+                    ALTER TABLE history_movement
+                    ADD CONSTRAINT FR_history_movement_end_location
+                        FOREIGN KEY (id_end_location) REFERENCES location (id);
             """)
 
             # Подтверждение изменений
@@ -107,20 +108,27 @@ class Database():
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
-                        INSERT INTO location (id_geografic_object, id_transport, date_arrival, location, describe) VALUES
-                            (0, 0, '2023-05-20', '14.57S, 175.47E', 'Landed successfully in January of 2004, operated for just over 6 years, 2 months'),
-                            (1, 1, '2035-01-04', '14.57S, 175.47E', 'Landed successfully in January of 2004, operated for just over 6 years, 2 months'),
-                            (2, 2, '2020-10-01', '14.57S, 175.47E', 'Landed successfully in January of 2004, operated for just over 6 years, 2 months'),
-                            (3, 3, '2009-03-11', '14.57S, 175.47E', 'Landed successfully in January of 2004, operated for just over 6 years, 2 months'),
-                            (4, 4, '2001-12-23', '14.57S, 175.47E', 'Landed successfully in January of 2004, operated for just over 6 years, 2 months');
-
-                        INSERT INTO geografic_object (name, type_locality, describe) VALUES
-                            ('Копрат', 'Каньоны', 'обширная равнина на Марсе, расположенная в южном полушарии планеты. Известна своими бескрайними песчаными дюнами и кратерами, а также редкими признаками водной активности в прошлом. В районе Копрата были обнаружены остатки каналов и дренажных систем, которые свидетельствуют о том, что здесь могла быть жизнь в прошлом. Также на этой равнине были обнаружены следы космических аппаратов, отправленных для исследования Марса.'),
-                            ('Маринер', 'Долина', 'долина на Марсе, которая была открыта и изучена зондами Маринер 9 и Викинг в 1970-х годах. Она находится на северном полушарии планеты и протянулась на более чем 4000 км. Долина Маринер считается одним из самых больших каньонов в Солнечной системе. Ее ширина достигает 200 км, а глубина - 4 км. Изучение долины Маринер помогло ученым понять, как формируются каньоны на планетах и какие процессы приводят к изменению ландшафта на Марсе'),
-                            ('Фарсида', 'Равнины', 'кратер на Марсе диаметром около 100 км, расположенный в районе Южного полюса планеты. В кратере Фарсида обнаружены следы ледяных образований, которые могут свидетельствовать о наличии подземных водных ресурсов на Марсе'),
-                            ('Ксанфа', 'Земля', 'кратер на Марсе диаметром около 170 км, расположенный в районе Эдомского плато. В кратере Ксанфа обнаружены следы ледяных образований и многочисленные каньоны, которые свидетельствуют о том, что здесь могла быть водная активность в прошлом'),
-                            ('Мелас', 'Расщелины', 'кратер на Марсе диаметром около 90 км, расположенный в районе Хребта Терберг. В кратере Мелас обнаружены следы ледяных образований и дренажных систем, которые свидетельствуют о том, что здесь могла быть жизнь в прошлом');
-
+                        INSERT INTO geografic_object (feature, type, size, named_in_year, named_for) VALUES
+                            ('Acidalia Planitia', 'Planitia, planitiae', 2300, 1973, 'Classical albedo feature at 44N, 21W'),
+                            ('Alba Patera', 'Patera, paterae', 530, 1973, 'Latin, "white region'),
+                            ('Albor Tholus', 'Tholus, tholi', 170, 1973, 'Classical albedo feature name'),
+                            ('Amazonis Planitia', 'Planitia, planitiae', 2800, 1973, 'Land of the Amazons; on the island Hesperia'),
+                            ('Arabia Terra', 'Terra, terrae', 5100, 1979, 'Classical albedo feature name');
+                                                
+                        INSERT INTO transport (name, type_transport, feature, describe) VALUES
+                            ('Mars Pathfinder Rover (USA)', 'Rover', '', ''),
+                            ('Mars 2 Lander (USSR)', 'Spacecraft', '', '');
+                                                
+                        INSERT INTO location (id_geografic_object, id_transport, location, describe) VALUES
+                            (1, 1, '46.7N, 22W', ''),
+                            (2, 1, '40.4N, 109.6W', ''),
+                            (3, 1, '18.8N, 150.4E', ''),
+                            (4, 2, '24.8N, 164W', ''),
+                            (5, 2, '22.8N, 5E', '');
+                                                
+                        INSERT INTO history_movement (id, id_begin_location, id_end_location, begin_data_movement, end_data_movement, distance_traveled, purpose, results) VALUES
+                            (1, 1, 2, '1996-05-01', '1996-07-20', 100, 'science', 'Landed successfully, operated for just under 3 months'),
+                            (2, 3, 4, '1996-05-01', '1996-06-01', 0, 'science', 'Failed during descent. First man-made object on Mars.');
                     """)
 
                 # Подтверждение изменений
@@ -131,13 +139,116 @@ class Database():
             self.connection.rollback()
             print("[INFO] location, geografic_object: Ошибка при заполнение данных:", ex)
 
+    def insert_geografic_object(self, feature, type, size, named_in_year, named_for):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO geografic_object (feature, type, size, named_in_year, named_for) VALUES
+                            (%s, %s, %s, %s, %s);""",
+                    (feature, type, size, named_in_year, named_for)
+                )
+
+                # Подтверждение изменений
+                self.connection.commit()
+                print("[INFO] [geografic_object] Данные успешно вставлены")
+        except Exception as ex:
+            # Откат транзакции в случае ошибки
+            self.connection.rollback()
+            print("[INFO] [geografic_object] Ошибка при заполнение данных:", ex)
+
+    def insert_transport(self, name, type_transport, feature, describe):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO transport (name, type_transport, feature, describe) VALUES
+                            (%s, %s, %s, %s);""",
+                    (name, type_transport, feature, describe)
+                )
+
+                # Подтверждение изменений
+                self.connection.commit()
+                print("[INFO] [transport] Данные успешно вставлены")
+        except Exception as ex:
+            # Откат транзакции в случае ошибки
+            self.connection.rollback()
+            print("[INFO] [transport] Ошибка при заполнение данных:", ex)
+
+    def insert_location(self, id_geografic_object, id_transport, location, describe):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO location (id_geografic_object, id_transport, location, describe) VALUES
+                             (%s, %s, %s, %s);""",
+                    (id_geografic_object, id_transport, location, describe)
+                )
+
+                # Подтверждение изменений
+                self.connection.commit()
+                print("[INFO] [location] Данные успешно вставлены")
+        except Exception as ex:
+            # Откат транзакции в случае ошибки
+            self.connection.rollback()
+            print("[INFO] [location] Ошибка при заполнение данных:", ex)
+
+    def insert_location(self, id_begin_location, id_end_location, begin_data_movement, end_data_movement, distance_traveled, purpose, results):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO history_movement (id_begin_location, id_end_location, begin_data_movement, end_data_movement, distance_traveled, purpose, results) VALUES
+                               (%s, %s, %s, %s, %s, %s, %s);""",
+                    (id_begin_location, id_end_location, begin_data_movement, end_data_movement, distance_traveled, purpose, results)
+                )
+
+                # Подтверждение изменений
+                self.connection.commit()
+                print("[INFO] [history_movement] Данные успешно вставлены")
+        except Exception as ex:
+            # Откат транзакции в случае ошибки
+            self.connection.rollback()
+            print("[INFO] [history_movement] Ошибка при заполнение данных:", ex)
+
+    def select_all(self):
+        try:
+            with self.connection.cursor() as cursor:
+                database = {}
+                name_table = ['geografic_object', 'transport', 'location', 'history_movement']
+                database['name_table'] = name_table
+                for name in name_table:
+                    cursor.execute(f"""SELECT * FROM {name};""")
+                    database[name] = cursor.fetchall()
+                    # Получим названия колонок из cursor.description
+                    database[f'{name}_name_col'] = [col[0] for col in cursor.description]
+
+                return database
+        except Exception as ex:
+            # Откат транзакции в случае ошибки
+            self.connection.rollback()
+            print("[INFO] Ошибка при чтении данных:", ex)
+
+    def print_select_all(self, database):
+        data_print = []
+
+        for name in database['name_table']:
+            table = PrettyTable()
+            table.field_names = database[f'{name}_name_col']
+            for row in database[name]:
+                table.add_row(row)
+            # Выводим таблицу на консоль
+            # print(table)
+            data_print.append(table)
+
+        return data_print
+
     def close(self):
         # Закрытие соединения
         if self.connection:
             self.connection.close()
             print("Соединение с базой данных закрыто")
 
-DB = Database()
-DB.connect()
-DB.insert_default_value()
-DB.close()
+# DB = Database()
+# DB.connect()
+# # DB.insert_default_value()
+# database = DB.select_all()
+# for table in DB.print_select_all(database):
+#     print(table)
+# DB.close()
