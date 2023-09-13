@@ -6,24 +6,27 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 import json
 
-from .models import GeograficObject, Location, Transport, HistoryMovement
+from .models import geografic_object
 
 def MainPage(request):
     return render(request, 'main.html')
 
+def SelectGeograficObject(request):
+    return render(request, 'select_geografic_object.html')
+
 def GetGeograficObjects(request):
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),
-        'GeograficObject': GeograficObject.objects.all()
+        'GeograficObject': geografic_object.objects.all()
     }})
 
 def GetGeograficObject(request, id):
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
-        'GeograficObject': GeograficObject.objects.filter(id=id)[0]
+        'GeograficObject': geografic_object.objects.filter(id=id)[0]
     }})
 
-def filter(request):
+def Filter(request):
     filter_keyword = request.GET.get('filter_keyword')
     filter_field = request.GET.get('filter_field')
 
@@ -40,7 +43,7 @@ def filter(request):
     # Получить список услуг из базы данных
     filtered_services = []
 
-    DB = GeograficObject.objects.all()
+    DB = geografic_object.objects.all()
 
     database = []
     # Пройти по каждому объекту и создать словарь с необходимыми значениями

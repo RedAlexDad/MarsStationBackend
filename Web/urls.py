@@ -27,11 +27,13 @@ from bmstu_lab import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Начальное меню
-    path('', views.MainPage),
+    path('main/', views.MainPage, name='main'),
+    # Начальное меню карты
+    path('main/select_geografic_object/', views.SelectGeograficObject, name='select_geografic_object'),
     # Список географических объектов
-    path('main/', views.GetGeograficObjects, name='geografic_objects'),
+    path('main/geografic_objects/', views.GetGeograficObjects, name='geografic_objects'),
     # Сведения о географических объектов
     path('main/geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
     # Фильтрация
-    path('main/filter/', views.filter, name='filter'),
+    path('main/filter/', views.Filter, name='filter'),
 ]
