@@ -23,13 +23,13 @@
 {#            <input type="submit" value="Submit">#}
 {#        </form>#}
         <form method="GET" action="{% url 'filter' %}">
-            <input type="text" name="filter_keyword" placeholder="Фильтр по наименованию или цене">
+            <input type="text" name="filter_keyword" placeholder="Введите">
             <select name="filter_field">
-                <option value="name">Название</option>
-                <option value="landing_risk">Риск приземления</option>
-                <option value="research_status">Статус исследования</option>
-                <option value="ID_astronaut">ID космонавта</option>
-                <option value="ID_spaceship">ID космического корабля</option>
+                <option value="feature">Название</option>
+                <option value="type">Тип местности</option>
+                <option value="size">Площадь</option>
+                <option value="named_in_year">Назван в ХХ годах</option>
+                <option value="named_for">Назван в кого честь</option>
             </select>
             <button type="submit">Применить фильтр</button>
         </form>

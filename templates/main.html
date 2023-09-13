@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'css/globals.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+    <body>
+        <div class="slide">
+            <img class="image" src="{% static 'images/main.png' %}" alt="Фоновое изображение Марса">
+            <div class="overlap-group">
+                <div class="rectangle"></div>
+                <a href="{% url 'geografic_objects' %}">
+                <div class="rectangle-2"></div>
+                    <div class="text-wrapper">
+                        Начать
+                    </div>
+                </a>
+            </div>
+            <div class="rectangle-3"></div>
+        </div>
+    </body>
+</html>

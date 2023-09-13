@@ -9,11 +9,13 @@
             <div class="card">
                 <div class="card-content">
                     <div class="text-content">
-                    <p>Информация о географическом объекте "{{ data.name }}"<p>
-                    <p>Тип местности: {{ data.type_locality }}</p>
-                    <p>Описание: {{ data.describe }}</p>
+                    <p>Информация о географическом объекте "{{ data.feature }}"</p>
+                    <p>Тип местности: {{ data.type }}</p>
+                    <p>Площадь: {{ data.size }}</p>
+                    <p>Назван по году {{ data.named_in_year }} году</p>
+                    <p>Назван в честь: {{ data.named_for }}</p>
                     </div>
-                <img src="{% static 'images/geograf_object/'|add:data.name|add:'.jpg' %}" class="card-image" style="width: 40%">
+                <img src="{% static 'images/geograf_object/'|add:data.feature|add:'.jpg' %}" class="card-image" style="width: 40%">
                 </div>
             </div>
         </div>

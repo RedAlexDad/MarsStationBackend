@@ -8,6 +8,9 @@ import json
 
 from .models import GeograficObject, Location, Transport, HistoryMovement
 
+def MainPage(request):
+    return render(request, 'main.html')
+
 def GetGeograficObjects(request):
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),

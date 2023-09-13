@@ -26,8 +26,12 @@ from bmstu_lab import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('hello/', views.hello),
-    path('', views.GetGeograficObjects),
-    path('geografic_object/<int:id>/', views.GetGeograficObject, name='geografic_object_url'),
-    path('filter/', views.filter, name='filter'),
+    # Начальное меню
+    path('', views.MainPage),
+    # Список географических объектов
+    path('main/', views.GetGeograficObjects, name='geografic_objects'),
+    # Сведения о географических объектов
+    path('main/geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
+    # Фильтрация
+    path('main/filter/', views.filter, name='filter'),
 ]

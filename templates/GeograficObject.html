@@ -1,18 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Информация о географического объекта {{ data.GeograficObject.name }}{% endblock %}
+{% block title %}Информация о географического объекта {{ data.GeograficObject.feature }}{% endblock %}
 
 {% block content %}
     <div class="grid-item">
         <div class="card">
             <div class="card-content">
                 <div class="text-content">
-                    <p>Информация о географическом объекте "{{ data.GeograficObject.name }}"</p>
-                    <p>Тип местности: {{ data.GeograficObject.type_locality }}</p>
-                    <p>Описание: {{ data.GeograficObject.describe }}</p>
+                    <p>Информация о географическом объекте "{{ data.GeograficObject.feature }}"</p>
+                    <p>Тип местности: {{ data.GeograficObject.type }}</p>
+                    <p>Площадь: {{ data.GeograficObject.size }}</p>
+                    <p>Назван в {{ data.GeograficObject.named_in_year }} году</p>
+                    <p>Назван в честь: {{ data.GeograficObject.named_for }}</p>
                 </div>
-                <img src="{% static 'images/geograf_object/'|add:data.GeograficObject.name|add:'.jpg' %}" class="card-image" style="width: 40%">
+                <img src="{% static 'images/geograf_object/'|add:data.GeograficObject.feature|add:'.jpg' %}" class="card-image" style="width: 40%">
             </div>
         </div>
     </div>
