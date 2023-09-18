@@ -3,45 +3,71 @@
 <html>
 <head>
     <link rel="stylesheet" href="{% static 'css/globals.css' %}">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/select_geografic_object.css' %}">
+    <link rel="stylesheet" href="{% static 'css/frame.css' %}">
 </head>
-<body>
-<div class="slide">
-    <img class="image" src="{% static 'images/map_mars.jpg' %}" alt="Фоновое изображение Марса">
-    <div class="overlap-group-2">
-        <div class="group">
-            <div class="text-wrapper-4">
-{#                <a href="{% url 'geografic_object' %}">#}
-{#                <div class="text-wrapper-2">Alba</div>#}
-{#                </a>#}
-                Alba
+    <body>
+        <div class="slide">
+            <img class="image" src="{% static 'images/main.png' %}" alt="Фоновое изображение Марса">
+            <div class="overlap-group">
+                <div class="rectangle"></div>
+                <a href="{% url 'select_geografic_object' %}">
+                <div class="rectangle-2"></div>
+                    <div class="text-wrapper">
+                        Начать
+                    </div>
+                </a>
+                <a href="{% url 'select_geografic_object' %}">
+                    <div class="rectangle-4"></div>
+                    <div class="text-wrapper">
+                        Посмотреть транспорты
+                    </div>
+                </a>
+
+                <a href="{% url 'select_geografic_object' %}">
+                    <div class="rectangle-5"></div>
+                    <div class="text-wrapper">
+                        Посмотреть географические объекты
+                    </div>
+                </a>
+                <div class="list-item">
+                    <div class="rectangle">Начать</div>
+                </div>
+                <div class="list-item">
+                    <div class="rectangle">Посмотреть транспорты</div>
+                </div>
+                <div class="list-item">
+                    <div class="rectangle">Посмотреть географические объекты</div>
+                </div>
             </div>
-            <div class="ellipse"></div>
+            <div class="rectangle-3"></div>
         </div>
-        <div class="group-2">
-            <div class="text-wrapper-5">Acidalia</div>
-            <div class="ellipse-2"></div>
+{#            <div class="overlap-group-2">#}
+{#                <div class="rectangle-3">#}
+{#                    <div class="rectangle-3">#}
+{#                        <div class="text-wrapper">Выберите географический объект</div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+
+{#            <div class="overlap-group-2">#}
+{#                <div class="rectangle-3">#}
+{#                    <div class="text-wrapper">Выберите географический объект</div>#}
+{#                </div>#}
+{#                <div class="overlap-group">#}
+{#                    <div class="rectangle-2"></div>#}
+{#                        <div class="text-wrapper">#}
+{#                            Посмотреть транспорты#}
+{#                        </div>#}
+{#                    <div class="rectangle">#}
+{#                        <a href="{% url 'main' %}">#}
+{#                            <div class="text-wrapper-2">Назад</div>#}
+{#                        </a>#}
+{#                        <a href="{% url 'geografic_objects' %}">#}
+{#                            <div class="text-wrapper-3">Посмотреть список географических объектов</div>#}
+{#                        </a>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
         </div>
-        <div class="group-3">
-            <div class="text-wrapper-6">Albor</div>
-            <div class="ellipse-3"></div>
-        </div>
-    </div>
-    <div class="rectangle-3">
-        <div class="text-wrapper">Выберите географический объект</div>
-    </div>
-    <div class="overlap-group">
-        <div class="rectangle">
-            <a href="{% url 'main' %}">
-                <div class="text-wrapper-2">Назад</div>
-            </a>
-            <a href="{% url 'geografic_objects' %}">
-{#                <div class="text-wrapper-2">Назад</div>#}
-                <div class="text-wrapper-3">Посмотреть список географических объектов</div>
-            </a>
-        </div>
-    </div>
-</div>
-</body>
+    </body>
 </html>

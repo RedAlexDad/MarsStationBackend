@@ -80,6 +80,7 @@
     width: 100%;
     height: 100%;
     z-index: -1; /* Помещаем фоновое изображение под контентом */
+    /*object-fit: cover;*/
 }
 
 .background-image img {

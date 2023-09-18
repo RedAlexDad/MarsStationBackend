@@ -7,13 +7,19 @@
     <head>
         <meta charset="utf-8">
         <title>{% block title %}{% endblock %}</title>
-        <link rel="stylesheet" type="text/css" href="{% static '/css/examp.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '/css/menu.css' %}">
+{#        <link rel="stylesheet" type="text/css" href="{% static '/css/globals.css'%}">#}
+        <link rel="stylesheet" type="text/css" href="{% static '/css/frame.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '/css/select_geografic_object.css' %}">
     </head>
     <body>
+{#        <div class="rectangle-3">#}
+{#            <div class="slide.overlap-group-2.rectangle-3.text-wrapper">Выберите географический объект</div>#}
+{#        </div>#}
         <div class="background-image">
-            <img src="{% static 'images/rocket.jpg' %}" alt="Фоновое изображение">
+            <img src="{% static 'images/map_mars.jpg' %}" alt="Фоновое изображение">
         </div>
-        <h1 style="color: #cccccc"> Выберите географические объекты для приземления и расширения станций </h1>
+        <h1 style="color: #cccccc; background-color: #3b3b3b"> Выберите географические объекты для приземления и расширения станций </h1>
         {# Наследование шаблонизации #}
         {% block content %}{% endblock %}
 {#        <form action="sendText" method="post" enctype="multipart/form-data">#}
