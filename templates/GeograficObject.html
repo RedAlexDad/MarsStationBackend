@@ -11,11 +11,14 @@
                     <p>Информация о географическом объекте "{{ data.GeograficObject.feature }}"</p>
                     <p>Тип местности: {{ data.GeograficObject.type }}</p>
                     <p>Площадь: {{ data.GeograficObject.size }}</p>
-                    <p>Назван в {{ data.GeograficObject.named_in_year }} году</p>
-                    <p>Назван в честь: {{ data.GeograficObject.named_for }}</p>
+                    <p>Описание: {{ data.GeograficObject.describe }} </p>
                 </div>
                 <img src="{% static 'images/geograf_object/'|add:data.GeograficObject.feature|add:'.jpg' %}" class="card-image" style="width: 40%">
             </div>
         </div>
+    <form method="GET" action="{% url 'filter' %}">
+            <input type="text" name="filter_keyword" placeholder="Введите">
+            <button type="submit">Удалить объект</button>
+        </form>
     </div>
 {% endblock %}

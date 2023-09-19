@@ -73,3 +73,5 @@ def Filter(request):
 
     return render(request, 'services.html', {'database': filtered_services})
 
+# Удаление объекта по ID
+# def DeleteObjectByID(request):

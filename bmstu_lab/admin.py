@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Viewer, Users, Employee, GeographicalObject, Status, Location, PositionOfLocations, Transport
+from .models import MarsStation, EmployeeSpaceAgency, EmployeeOrganization, Location, GeographicalObject, Status, Users, Transport
 
-admin.site.register(GeographicalObject)
-admin.site.register(Transport)
-admin.site.register(PositionOfLocations)
+admin.site.register(MarsStation)
+admin.site.register(EmployeeSpaceAgency)
+admin.site.register(EmployeeOrganization)
 admin.site.register(Location)
+admin.site.register(GeographicalObject)
 admin.site.register(Status)
-admin.site.register(Employee)
-admin.site.register(Viewer)
 admin.site.register(Users)
+admin.site.register(Transport)

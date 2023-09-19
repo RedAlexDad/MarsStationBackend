@@ -1,7 +1,7 @@
 # import psycopg2
 from django.db import models
 
-# Модель для пользователей
+# Пользователь
 class Users(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     login = models.CharField(max_length=255)
@@ -12,11 +12,13 @@ class Users(models.Model):
         managed = False
         db_table = 'users'
 
-# Модель для сотрудника
-class Employee(models.Model):
+# Сотрудник космического агенства
+class EmployeeSpaceAgency(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     full_name = models.CharField(max_length=255)
     post = models.CharField(max_length=255)
+    name_space_agency = models.CharField(max_length=255)
+    address_space_agency = models.CharField(max_length=255)
     # Добавляем внешний ключ к другой модели
     id_user = models.ForeignKey(
         Users,
@@ -26,12 +28,15 @@ class Employee(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'employee'
+        db_table = 'employee_space_agency'
 
-# Модель для зрителя
-class Viewer(models.Model):
+# Сотрудник организации
+class EmployeeOrganization(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     full_name = models.CharField(max_length=255)
+    post = models.CharField(max_length=255)
+    name_organization = models.CharField(max_length=255)
+    address_organization = models.CharField(max_length=255)
     # Добавляем внешний ключ к другой модели
     id_user = models.ForeignKey(
         Users,
@@ -41,9 +46,9 @@ class Viewer(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'viewer'
+        db_table = 'employee_organization'
 
-# Модель для статуса
+# Статус
 class Status(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     status_task = models.CharField(max_length=255)
@@ -52,20 +57,19 @@ class Status(models.Model):
         managed = False
         db_table = 'status'
 
-# Модель для географических объектов
+# Географический объект (услуга)
 class GeographicalObject(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     type = models.CharField(max_length=255)
     feature = models.CharField(max_length=255)
-    size = models.IntegerField()
-    named_in = models.IntegerField()
-    named_for = models.CharField(max_length=255)
+    size = models.IntegerField(null=True, blank=True)
+    describe = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         managed = False
         db_table = 'geographical_object'
 
-# Модель для транспорта
+# Транспорт (доп. информация для услуги)
 class Transport(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     name = models.CharField(max_length=255)
@@ -76,23 +80,23 @@ class Transport(models.Model):
         managed = False
         db_table = 'transport'
 
-# Модель для точных местоположений
-class Location(models.Model):
+# Марсианская станция (заявка)
+class MarsStation(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
-    landing_date = models.DateField()
+    landing_date = models.IntegerField()
     location = models.CharField(max_length=255)
 
     # Добавляем внешний ключ к другой модели
-    id_viewer = models.ForeignKey(
-        Viewer,
+    id_employee_organization = models.ForeignKey(
+        EmployeeOrganization,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_viewer',  # Имя поля в базе данных
+        db_column='id_employee_organization',  # Имя поля в базе данных
     )
 
-    id_employee = models.ForeignKey(
-        Employee,
+    id_employee_space_agency = models.ForeignKey(
+        EmployeeSpaceAgency,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_employee',  # Имя поля в базе данных
+        db_column='id_employee_space_agency',  # Имя поля в базе данных
     )
 
     id_status = models.ForeignKey(
@@ -103,11 +107,11 @@ class Location(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'location'
+        db_table = 'mars_station'
 
 
-# Модель для позиций местоположений
-class PositionOfLocations(models.Model):
+# Местоположение (вспомогательная таблица)
+class Location(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     # Добавляем внешний ключ к другой модели
     id_geographical_object = models.ForeignKey(
@@ -115,21 +119,19 @@ class PositionOfLocations(models.Model):
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_geographical_object',  # Имя поля в базе данных
     )
-    id_location = models.ForeignKey(
-        Location,
-        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_location',  # Имя поля в базе данных
-    )
     id_transport = models.ForeignKey(
         Transport,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_transport',  # Имя поля в базе данных
     )
-    data_begin_movement = models.DateField()
-    data_end_movement = models.DateField()
+    id_mars_station = models.ForeignKey(
+        MarsStation,
+        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
+        db_column='id_mars_station',  # Имя поля в базе данных
+        related_name='id_mars_station_location',  # Пользовательское имя
+    )
     purpose = models.CharField(max_length=255)
     results = models.CharField(max_length=255)
-    distance_traveled = models.FloatField()
     class Meta:
         managed = False
-        db_table = 'position_of_locations'
+        db_table = 'location'
