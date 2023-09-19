@@ -10,64 +10,28 @@
             <img class="image" src="{% static 'images/main.png' %}" alt="Фоновое изображение Марса">
             <div class="overlap-group">
                 <div class="rectangle"></div>
-                <a href="{% url 'select_geografic_object' %}">
-                <div class="rectangle-2"></div>
-                    <div class="text-wrapper">
-                        Начать
+                <a href="{% url 'geografic_objects' %}">
+                    <div class="rectangle-1-select">
+                        <span class="text-wrapper">
+                            Посмотреть географические объекты
+                        </span>
                     </div>
                 </a>
-                <a href="{% url 'select_geografic_object' %}">
-                    <div class="rectangle-4"></div>
-                    <div class="text-wrapper">
-                        Посмотреть транспорты
+                <a href="{% url 'geografic_objects' %}">
+                    <div class="rectangle-2-select">
+                        <span class="text-wrapper">
+                            Посмотреть транспорты
+                        </span>
                     </div>
                 </a>
-
-                <a href="{% url 'select_geografic_object' %}">
-                    <div class="rectangle-5"></div>
-                    <div class="text-wrapper">
-                        Посмотреть географические объекты
+                <a href="{% url 'main' %}">
+                    <div class="rectangle-3-select">
+                         <span class="text-wrapper">
+                            Назад
+                        </span>
                     </div>
                 </a>
-                <div class="list-item">
-                    <div class="rectangle">Начать</div>
-                </div>
-                <div class="list-item">
-                    <div class="rectangle">Посмотреть транспорты</div>
-                </div>
-                <div class="list-item">
-                    <div class="rectangle">Посмотреть географические объекты</div>
-                </div>
-            </div>
             <div class="rectangle-3"></div>
-        </div>
-{#            <div class="overlap-group-2">#}
-{#                <div class="rectangle-3">#}
-{#                    <div class="rectangle-3">#}
-{#                        <div class="text-wrapper">Выберите географический объект</div>#}
-{#                    </div>#}
-{#                </div>#}
-{#            </div>#}
-
-{#            <div class="overlap-group-2">#}
-{#                <div class="rectangle-3">#}
-{#                    <div class="text-wrapper">Выберите географический объект</div>#}
-{#                </div>#}
-{#                <div class="overlap-group">#}
-{#                    <div class="rectangle-2"></div>#}
-{#                        <div class="text-wrapper">#}
-{#                            Посмотреть транспорты#}
-{#                        </div>#}
-{#                    <div class="rectangle">#}
-{#                        <a href="{% url 'main' %}">#}
-{#                            <div class="text-wrapper-2">Назад</div>#}
-{#                        </a>#}
-{#                        <a href="{% url 'geografic_objects' %}">#}
-{#                            <div class="text-wrapper-3">Посмотреть список географических объектов</div>#}
-{#                        </a>#}
-{#                    </div>#}
-{#                </div>#}
-{#            </div>#}
         </div>
     </body>
 </html>

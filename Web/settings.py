@@ -124,6 +124,7 @@ USE_TZ = True
 
 # Не работает
 # STATIC_URL = "bmstu_lab/static/"
+# Работает
 STATIC_URL = "/static/"
 
 # Это позволяет Django искать статические файлы в папке "static" в корневом каталоге проекта.

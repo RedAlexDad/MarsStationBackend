@@ -1,22 +1,3 @@
-@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
-* {
-  -webkit-font-smoothing: antialiased;
-  box-sizing: border-box;
-}
-html,
-body {
-  margin: 0px;
-  height: 100%;
-}
-/* a blue color as a generic focus style */
-button:focus-visible {
-  outline: 2px solid #4a90e2 !important;
-  outline: -webkit-focus-ring-color auto 5px !important;
-}
-a {
-  text-decoration: none;
-}
-@import url("https://fonts.googleapis.com/css?family=Inter:100");
 
 .slide {
   background-color: #ffffff;
@@ -63,12 +44,55 @@ a {
 
 /*Середина шапка*/
 .slide .rectangle-2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: absolute;
   width: 30%;
-  height: 15%;
-  top: 45%;
+  height: 10%;
+  top: 50%;
   left: 50%;
   background-color: #3c3c3c;
+  transform: translate(-50%, -50%);
+}
+
+.slide .rectangle-1-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 30%;
+  height: 10%;
+  top: 35%;
+  left: 50%;
+  background-color: #3c3c3c;
+  transform: translate(-50%, -50%);
+}
+
+.slide .rectangle-2-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 30%;
+  height: 10%;
+  top: 50%;
+  left: 50%;
+  background-color: #3c3c3c;
+  transform: translate(-50%, -50%);
+}
+
+.slide .rectangle-3-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 30%;
+  height: 10%;
+  top: 65%;
+  left: 50%;
+  background-color: #3c3c3c;
+  transform: translate(-50%, -50%);
 }
 
 /*Нижняя шапка*/
@@ -82,14 +106,11 @@ a {
 
 /*Текст на середине шапки*/
 .slide .text-wrapper {
-  position: absolute;
-  width: 180px;
-  top: 401px;
-  left: 873px;
+
   font-family: "Inter", Helvetica, serif;
   font-weight: 100;
-  color: #ffffff;
-  font-size: 40px;
+  color: white;
+  font-size: 30px;
   text-align: center;
   letter-spacing: 0;
   line-height: normal;

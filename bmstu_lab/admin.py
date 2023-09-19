@@ -1,7 +1,11 @@
 from django.contrib import admin
-from .models import geografic_object, transport, history_movement, location
+from .models import Viewer, Users, Employee, GeographicalObject, Status, Location, PositionOfLocations, Transport
 
-admin.site.register(geografic_object)
-admin.site.register(transport)
-admin.site.register(history_movement)
-admin.site.register(location)
+admin.site.register(GeographicalObject)
+admin.site.register(Transport)
+admin.site.register(PositionOfLocations)
+admin.site.register(Location)
+admin.site.register(Status)
+admin.site.register(Employee)
+admin.site.register(Viewer)
+admin.site.register(Users)
