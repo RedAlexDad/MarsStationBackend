@@ -36,5 +36,6 @@ urlpatterns = [
     path('geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
     # Фильтрация
     path('filter/', views.Filter, name='filter'),
+    path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
     # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
 ]

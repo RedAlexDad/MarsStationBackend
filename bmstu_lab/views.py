@@ -5,6 +5,7 @@ from datetime import date
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 import json
+from .database import Database
 
 from .models import GeographicalObject
 
@@ -15,15 +16,24 @@ def SelectGeograficObject(request):
     return render(request, 'select_geografic_object.html')
 
 def GetGeograficObjects(request):
+    DB = Database()
+    DB.connect()
+    DB_geografical_object_with_status = DB.get_geografical_object_with_status()
+    DB.close()
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),
-        'GeograficObject': GeographicalObject.objects.all()
+        'GeograficObject': DB_geografical_object_with_status
     }})
 
 def GetGeograficObject(request, id):
+    DB = Database()
+    DB.connect()
+    DB_locations = DB.get_locations_by_id(GeographicalObject.objects.filter(id=id).first().id)
+    DB.close()
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
-        'GeograficObject': GeographicalObject.objects.filter(id=id)[0]
+        'GeograficObject': GeographicalObject.objects.filter(id=id)[0],
+        'Locations': DB_locations
     }})
 
 def Filter(request):
@@ -50,28 +60,37 @@ def Filter(request):
     for obj in DB:
         data = {
             'id': obj.id,
-            'feature': obj.feature,
             'type': obj.type,
+            'feature': obj.feature,
             'size': obj.size,
-            'named_in_year': obj.named_in_year,
-            'named_for': obj.named_for,
+            'describe': obj.describe,
+            'url_photo': obj.url_photo,
         }
         database.append(data)
 
-    if filter_field == 'feature':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['feature'].lower()]
     if filter_field == 'type':
         filtered_services = [service for service in database if filter_keyword.lower() in service['type'].lower()]
+    if filter_field == 'feature':
+        filtered_services = [service for service in database if filter_keyword.lower() in service['feature'].lower()]
     elif filter_field == 'size':
         filtered_services = [service for service in database if service['size'] == int(filter_keyword)]
-    elif filter_field == 'named_in_year':
-        filtered_services = [service for service in database if service['named_in_year'] == int(filter_keyword)]
-    elif filter_field == 'named_for':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['named_for'].lower()]
+    elif filter_field == 'describe':
+        filtered_services = [service for service in database if filter_keyword.lower() in service['describe'].lower()]
     else:
         pass
 
     return render(request, 'services.html', {'database': filtered_services})
 
-# Удаление объекта по ID
-# def DeleteObjectByID(request):
+# Удаление объекта по ID, изменяя статус
+def DeleteObjectByID(request):
+    if request.method == 'POST':
+        # Получаем значение object_id из POST-запроса
+        object_id = int(request.POST.get('object_id'))
+        if (object_id is not None):
+            # Выполняем SQL запрос для редактирования статуса
+            DB = Database()
+            DB.connect()
+            DB.update_status_delete_geografical_object(status_task='Удален', id_geografical_object=object_id)
+            DB.close()
+    # Перенаправим на предыдующую ссылку после успешного удаления
+    return redirect('geografic_objects')

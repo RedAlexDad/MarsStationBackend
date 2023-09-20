@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Информация о географического объекта {{ data.order.name }}{% endblock %}
+{% block title %}Информация о географического объекта {{ data.name }}{% endblock %}
 
 {% block content %}
     {% for data in database %}
@@ -12,12 +12,14 @@
                     <p>Информация о географическом объекте "{{ data.feature }}"</p>
                     <p>Тип местности: {{ data.type }}</p>
                     <p>Площадь: {{ data.size }}</p>
-                    <p>Назван по году {{ data.named_in_year }} году</p>
-                    <p>Назван в честь: {{ data.named_for }}</p>
+                    <p>Площадь: {{ data.describe }}</p>
                     </div>
-                <img src="{% static 'images/geograf_object/'|add:data.feature|add:'.jpg' %}" class="card-image" style="width: 40%">
+                <img src={{ data.url_photo }} class="card-image" style="width: 40%">
                 </div>
             </div>
+            <form method="GET" action="{% url 'filter' %}">
+                <button type="submit">Удалить объект</button>
+            </form>
         </div>
         {% empty %}
             <h3 style="color: #cccccc">Нет доступных услуг.</h3>

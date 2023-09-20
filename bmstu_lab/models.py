@@ -64,6 +64,7 @@ class GeographicalObject(models.Model):
     feature = models.CharField(max_length=255)
     size = models.IntegerField(null=True, blank=True)
     describe = models.CharField(max_length=255, null=True, blank=True)
+    url_photo = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         managed = False
@@ -75,6 +76,7 @@ class Transport(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     describe = models.CharField(max_length=255, null=True, blank=True)
+    url_photo = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         managed = False
