@@ -18,7 +18,7 @@ def SelectGeograficObject(request):
 def GetGeograficObjects(request):
     DB = Database()
     DB.connect()
-    DB_geografical_object_with_status = DB.get_geografical_object_with_status()
+    DB_geografical_object_with_status = DB.get_geografical_object_with_status_true()
     DB.close()
     return render(request, 'GeograficObjects.html', {'data' : {
         'current_date': date.today(),
@@ -26,14 +26,14 @@ def GetGeograficObjects(request):
     }})
 
 def GetGeograficObject(request, id):
-    DB = Database()
-    DB.connect()
-    DB_locations = DB.get_locations_by_id(GeographicalObject.objects.filter(id=id).first().id)
-    DB.close()
+    # DB = Database()
+    # DB.connect()
+    # DB_locations = DB.get_locations_by_id(GeographicalObject.objects.filter(id=id).first().id)
+    # DB.close()
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
         'GeograficObject': GeographicalObject.objects.filter(id=id)[0],
-        'Locations': DB_locations
+        # 'Locations': DB_locations
     }})
 
 def Filter(request):
@@ -90,7 +90,7 @@ def DeleteObjectByID(request):
             # Выполняем SQL запрос для редактирования статуса
             DB = Database()
             DB.connect()
-            DB.update_status_delete_geografical_object(status_task='Удален', id_geografical_object=object_id)
+            DB.update_status_delete_geografical_object(status_task=False, id_geografical_object=object_id)
             DB.close()
     # Перенаправим на предыдующую ссылку после успешного удаления
     return redirect('geografic_objects')

@@ -25,8 +25,8 @@ class Database():
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute("""
-                    DROP TABLE geographical_object, transport, location, mars_station, status, employee_organization, employee_space_agency, users CASCADE;
-                    """)
+                    DROP TABLE geographical_object, transport, location, mars_station, status, scientist, users CASCADE;
+                """)
 
             # Подтверждение изменений
             self.connection.commit()
@@ -40,13 +40,16 @@ class Database():
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute("""                             
-                    -- Географические объекты
+                                        -- Географические объекты
                     CREATE TABLE geographical_object (
                         id SERIAL PRIMARY KEY,
                         type VARCHAR NOT NULL,
                         feature VARCHAR NOT NULL,
                         size INT NULL,
-                        describe VARCHAR NULL
+                        describe VARCHAR NULL,
+                        url_photo VARCHAR NULL,
+                        -- Доступен / недоступен
+                        status BOOLEAN NOT NULL
                     );
                     
                     -- Транспортом могжет быть: посадочные, марсоходы, марсолеты и т.д.
@@ -54,27 +57,26 @@ class Database():
                         id SERIAL PRIMARY KEY,
                         name VARCHAR NOT NULL,
                         type VARCHAR NOT NULL,
-                        describe VARCHAR NULL
+                        describe VARCHAR NULL,
+                        url_photo VARCHAR NULL
                     );
                     
                     -- Местоположение
                     CREATE TABLE location (
                         id SERIAL PRIMARY KEY,
                         id_geographical_object INT NOT NULL,
-                        id_transport INT NOT NULL,
-                        id_mars_station INT NOT NULL,
-                        purpose VARCHAR NOT NULL,
-                        results VARCHAR NOT NULL
+                        id_mars_station INT NOT NULL
                     );
                     
                     -- Марсианская станция
                     CREATE TABLE mars_station (
                         id SERIAL PRIMARY KEY,
-                        landing_date INT NULL,
-                        -- Долгота, широта, высота
-                        location VARCHAR NOT NULL,
-                        id_employee_organization INT NOT NULL,
-                        id_employee_space_agency INT NOT NULL,
+                        type_status VARCHAR NOT NULL,
+                        data_create DATE NOT NULL,
+                        data_from DATE NOT NULL,
+                        data_close DATE NOT NULL,
+                        id_scientist INT NOT NULL,
+                        id_transport INT NOT NULL,
                         id_status INT NOT NULL
                     );
                     
@@ -88,21 +90,12 @@ class Database():
                         status_mission VARCHAR NOT NULL
                     );
                     
-                    CREATE TABLE employee_organization (
+                    CREATE TABLE scientist (
                         id SERIAL PRIMARY KEY,
                         full_name VARCHAR NOT NULL,
                         post VARCHAR NOT NULL,
                         name_organization VARCHAR NOT NULL,
-                        address_organization VARCHAR NULL,
-                        id_user INT NOT NULL
-                    );
-                    
-                    CREATE TABLE employee_space_agency (
-                        id SERIAL PRIMARY KEY,
-                        full_name VARCHAR NOT NULL,
-                        post VARCHAR NOT NULL,
-                        name_space_agency VARCHAR NOT NULL,
-                        address_space_agency VARCHAR NULL,
+                        address VARCHAR NULL,
                         id_user INT NOT NULL
                     );
                     
@@ -119,31 +112,23 @@ class Database():
                         FOREIGN KEY (id_geographical_object) REFERENCES geographical_object (id);
                     
                     ALTER TABLE location
-                    ADD CONSTRAINT FR_location_of_transport
-                        FOREIGN KEY (id_transport) REFERENCES transport (id);
-                    
-                    ALTER TABLE location
                     ADD CONSTRAINT FR_location_of_mars_station
                         FOREIGN KEY (id_mars_station) REFERENCES mars_station (id);
+                    
+                    ALTER TABLE mars_station
+                    ADD CONSTRAINT FR_mars_station_of_transport
+                        FOREIGN KEY (id_transport) REFERENCES transport (id);
+                    
+                    ALTER TABLE mars_station
+                    ADD CONSTRAINT FR_mars_station_of_scientist
+                        FOREIGN KEY (id_scientist) REFERENCES scientist (id);
                     
                     ALTER TABLE mars_station
                     ADD CONSTRAINT FR_mars_station_of_status
                         FOREIGN KEY (id_status) REFERENCES status (id);
                     
-                    ALTER TABLE mars_station
-                    ADD CONSTRAINT FR_mars_station_of_viewer
-                        FOREIGN KEY (id_employee_organization) REFERENCES employee_organization (id);
-                    
-                    ALTER TABLE mars_station
-                    ADD CONSTRAINT FR_mars_station_of_employee
-                        FOREIGN KEY (id_employee_space_agency) REFERENCES employee_space_agency (id);
-                    
-                    ALTER TABLE employee_organization
+                    ALTER TABLE scientist
                     ADD CONSTRAINT FR_employee_organization_of_users
-                        FOREIGN KEY (id_user) REFERENCES users (id);
-                    
-                    ALTER TABLE employee_space_agency
-                    ADD CONSTRAINT FR_employee_space_agency_of_users
                         FOREIGN KEY (id_user) REFERENCES users (id);
             """)
 
@@ -159,34 +144,50 @@ class Database():
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    -- ПОЛЬЗОВАТЕЛЬ (АУТЕНФИКАЦИЯ)
+                                        -- ПОЛЬЗОВАТЕЛЬ (АУТЕНФИКАЦИЯ)
                     INSERT INTO users (login, password, admin) VALUES
                         ('user001', '123456', false),
                         ('user002', '123456', false),
                         ('user003', '123456', true),
                         ('user004', '123456', true);
-                    -- СОТРУДНИК ОРГАНИЗАЦИИ (ЗАКАЗЧИК)
-                    INSERT INTO employee_organization (full_name, post, name_organization, address_organization, id_user) VALUES
+                    
+                    -- Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
+                    INSERT INTO scientist (full_name, post, name_organization, address, id_user) VALUES
                         ('Джон Гротцингер', 'Профессор геологии, главный ученый миссии марсохода Curiosity', 'Калифорнийский технологический институт (Caltech)', '', 1),
-                        ('Сергей Павлович Королев', 'Руководитель', 'Главное управление по ракетостроению и ракетным двигателям (ГУРРД)', '', 2);
-                    -- СОТРУДНИК КОСМИЧЕСКОГО АГЕНСТВА (ПРИНИМАЮЩИЙ ЗАКАЗЧИКА)
-                    INSERT INTO employee_space_agency (full_name, post, name_space_agency, address_space_agency, id_user) VALUES
+                        ('Сергей Павлович Королев', 'Руководитель', 'Главное управление по ракетостроению и ракетным двигателям (ГУРРД)', '', 2),
                         ('Джеймс М. Бегс', 'Руководитель NASA', 'NASA', '', 3),
                         ('Георгий Тимофеевич Береговой', 'Начальник', 'Межпланетный отдел Центрального научно-исследовательского института машиностроения (ЦНИИмаш) имени академика М. В. Хруничева', '', 4);
+                    
                     -- ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ (УСЛУГА)
-                    INSERT INTO geographical_object (type, feature, size, describe) VALUES
-                        ('Planitia, planitiae', 'Acidalia Planitia', 2300, 'обширная тёмная равнина на Марсе. Размер — около 3 тысяч км, координаты центра — 50° с. ш. 339°. Расположена между вулканическим регионом Тарсис и Землёй Аравия, к северо-востоку от долин Маринера. На севере переходит в Великую Северную равнину, на юге — в равнину Хриса; на восточном краю равнины находится регион Кидония. Диаметр около 3000 км.'),
-                        ('Patera, paterae', 'Alba Patera', 530, 'Огромный низкий вулкан, расположенный в северной части региона Фарсида на планете Марс. Это самый большой по площади вулкан на Марсе: потоки извергнутой из него породы прослеживаются на расстоянии как минимум 1350 км от его пика.'),
-                        ('Tholus, tholi', 'Albor Tholus', 170, 'Потухший вулкан нагорья Элизий, расположенный на Марсе. Находится к югу от соседних горы Элизий и купола Гекаты. Вулкан достигает 4,5 километров в высоту и 160 километров в диаметре основания.'),
-                        ('Planitia, planitiae', 'Amazonis Planitia', 2800, 'Слабоокрашенная равнина в северной экваториальной области Марса. Довольно молода, породы имеют возраст 10-100 млн. лет. Часть этих пород представляют собой застывшую вулканическую лаву.'),
-                        ('Terra, terrae', 'Arabia Terra', 5100, 'Большая возвышенная область на севере Марса, которая лежит в основном в четырехугольнике Аравия, но небольшая часть находится в четырехугольнике Маре Ацидалиум. Она густо изрыта кратерами и сильно разрушена.');
+                    INSERT INTO geographical_object (type, feature, size, describe, url_photo, status) VALUES
+                        ('Planitia, planitiae', 'Acidalia Planitia', 2300,
+                         'обширная тёмная равнина на Марсе. Размер — около 3 тысяч км, координаты центра — 50° с. ш. 339°. Расположена между вулканическим регионом Тарсис и Землёй Аравия, к северо-востоку от долин Маринера. На севере переходит в Великую Северную равнину, на юге — в равнину Хриса; на восточном краю равнины находится регион Кидония. Диаметр около 3000 км.',
+                         'http://themis.asu.edu/files/feature_thumbnails/002acidaliaTN1.jpg',
+                         true),
+                        ('Patera, paterae', 'Alba Patera', 530,
+                         'Огромный низкий вулкан, расположенный в северной части региона Фарсида на планете Марс. Это самый большой по площади вулкан на Марсе: потоки извергнутой из него породы прослеживаются на расстоянии как минимум 1350 км от его пика.',
+                         'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg/1280px-Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg',
+                         true),
+                        ('Tholus, tholi', 'Albor Tholus', 170,
+                         'Потухший вулкан нагорья Элизий, расположенный на Марсе. Находится к югу от соседних горы Элизий и купола Гекаты. Вулкан достигает 4,5 километров в высоту и 160 километров в диаметре основания.',
+                         'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Albor_Tholus_THEMIS.jpg/800px-Albor_Tholus_THEMIS.jpg',
+                         true),
+                        ('Planitia, planitiae', 'Amazonis Planitia', 2800,
+                         'Слабоокрашенная равнина в северной экваториальной области Марса. Довольно молода, породы имеют возраст 10-100 млн. лет. Часть этих пород представляют собой застывшую вулканическую лаву.',
+                         'https://upload.wikimedia.org/wikipedia/commons/3/31/26552sharpridges.jpg',
+                         true),
+                        ('Terra, terrae', 'Arabia Terra', 5100,
+                         'Большая возвышенная область на севере Марса, которая лежит в основном в четырехугольнике Аравия, но небольшая часть находится в четырехугольнике Маре Ацидалиум. Она густо изрыта кратерами и сильно разрушена.',
+                         'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Eden_Patera_THEMIS_day_IR.jpg/1189px-Eden_Patera_THEMIS_day_IR.jpg',
+                         true);
+                    
                     -- ТРАНСПОРТ (ДОП. ИНФА К УСЛУГЕ)
-                    INSERT INTO transport (name, type, describe) VALUES
-                        ('Mars Pathfinder Rover (USA)', 'Rover', ''),
-                        ('Viking 1 Lander (USA)', 'Spacecraft', ''),
-                        ('Viking 2 Lander (USA)', 'Spacecraft', ''),
-                        ('Mars 6 Lander (USSR)', 'Spacecraft', ''),
-                        ('Mars 2 Lander (USSR)', 'Spacecraft', '');
+                    INSERT INTO transport (name, type, describe, url_photo) VALUES
+                        ('Mars Pathfinder Rover (USA)', 'Rover', '', 'https://slideplayer.biz.tr/slide/5582070/17/images/5/Pathfinder+%28İzci%29+uzay+aracı.jpg'),
+                        ('Viking 1 Lander (USA)', 'Spacecraft', '', 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Viking_spacecraft.jpg/1304px-Viking_spacecraft.jpg'),
+                        ('Viking 2 Lander (USA)', 'Spacecraft', '', 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Viking_spacecraft.jpg/1304px-Viking_spacecraft.jpg'),
+                        ('Mars 6 Lander (USSR)', 'Spacecraft', '', 'https://upload.wikimedia.org/wikipedia/commons/9/90/Mars_6.jpg'),
+                        ('Mars 2 Lander (USSR)', 'Spacecraft', '', 'https://upload.wikimedia.org/wikipedia/commons/1/13/Mars3_iki.jpg');
                     
                     -- СТАТУС (ДЛЯ ЗАЯВКИ)
                     INSERT INTO status (status_task, status_mission) VALUES
@@ -197,20 +198,22 @@ class Database():
                         ('Удален', 'Успех');
                     
                     -- МАРСИАНСКАЯ СТАНЦИЯ (ЗАЯВКА)
-                    INSERT INTO mars_station (landing_date, location, id_employee_organization, id_employee_space_agency, id_status) VALUES
-                        (1980, '19.26N, 33.25W', 1, 1, 1),
-                        (1975, '22.46N, 47.95W', 1, 1, 2),
-                        (1975, '47.93N, 133.74E', 1, 1, 3),
-                        (1973, '23.92S, 19.45W', 2, 2, 4),
-                        (1971, '45.04S, 47E', 2, 2, 5);
+                    -- Примечание:
+                    -- Тип заявки (например, исследовательская, коммерческая и т. д.)
+                    INSERT INTO mars_station (type_status, data_create, data_from, data_close, id_scientist, id_transport, id_status) VALUES
+                        ('Исследовательская', '1972-09-01', '1973-11-04', '1975-05-08', 1, 1, 1),
+                        ('Коммерческая', '1975-05-08', '1976-11-07', '1977-11-01', 2, 2, 2),
+                        ('Коммерческая', '1982-07-15', '1983-07-11', '1984-01-06', 3, 3, 3),
+                        ('Исследовательская', '1968-06-17', '1969-04-09', '1970-03-03', 1, 4, 4),
+                        ('Исследовательская', '1988-03-18', '1989-05-05', '1990-05-07', 4, 5, 5);
                     
                     -- МЕСТОПОЛОЖЕНИЕ (ВСПОМОГАТЕЛЬНАЯ ТАБЛИЦА ДЛЯ М-М УСЛУГА-ЗАЯВКА)
-                    INSERT INTO location (id_geographical_object, id_transport, id_mars_station, purpose, results) VALUES
-                        (1, 1, 1, 'Исследование', 'Успешное испытание'),
-                        (2, 2, 2, 'Исследование', 'Разбился'),
-                        (3, 3, 3, 'Исследование', 'Потеря связи'),
-                        (4, 4, 4, 'Исследование', 'Разбился'),
-                        (5, 5, 5, 'Добыча', 'В процессе');
+                    INSERT INTO location (id_geographical_object, id_mars_station) VALUES
+                        (1, 1),
+                        (2, 2),
+                        (3, 3),
+                        (4, 4),
+                        (5, 5);
                     """)
 
                 # Подтверждение изменений
@@ -331,7 +334,7 @@ class Database():
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(
-                    """UPDATE status SET status_task = %s WHERE id = %s;""",
+                    """UPDATE geographical_object SET status = %s WHERE id = %s;""",
                     (status_task, id_geografical_object)
                 )
 
@@ -358,22 +361,13 @@ class Database():
             # Откат транзакции в случае ошибки
             self.connection.rollback()
             print("[INFO] [Status] Ошибка при обновление данных:", ex)
-    def get_geografical_object_with_status(self):
+    def get_geografical_object_with_status_true(self):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT
-                        GO.id,
-                        GO.type,
-                        GO.feature,
-                        GO.describe,
-                        GO.url_photo
-                    FROM location as L
-                    INNER JOIN geographical_object as GO ON L.id_geographical_object = GO.id
-                    INNER JOIN mars_station as MS ON L.id_mars_station = MS.id
-                    INNER JOIN status as S ON MS.id_status = S.id
-                    WHERE S.status_task NOT LIKE ('Удален')
+                    SELECT * FROM geographical_object as GO
+                        WHERE GO.status = true;
                     """)
                 # Получаем данные
                 results = cursor.fetchall()
@@ -385,10 +379,11 @@ class Database():
                 for obj in results:
                     data = {
                         'id': obj[0],
-                        'type': obj[1],
-                        'feature': obj[2],
+                        'feature': obj[1],
+                        'type': obj[2],
                         'describe': obj[3],
-                        'url_photo': obj[4],
+                        'status': obj[4],
+                        'url_photo': obj[5],
                     }
                     database.append(data)
 

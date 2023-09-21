@@ -7,46 +7,26 @@ class Users(models.Model):
     login = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     admin = models.BooleanField()
-
     class Meta:
         managed = False
         db_table = 'users'
 
-# Сотрудник космического агенства
-class EmployeeSpaceAgency(models.Model):
+# Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
+class Scientist(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     full_name = models.CharField(max_length=255)
     post = models.CharField(max_length=255)
     name_space_agency = models.CharField(max_length=255)
-    address_space_agency = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
     # Добавляем внешний ключ к другой модели
     id_user = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_user',  # Имя поля в базе данных
     )
-
     class Meta:
         managed = False
         db_table = 'employee_space_agency'
-
-# Сотрудник организации
-class EmployeeOrganization(models.Model):
-    id = models.BigAutoField(primary_key=True, serialize=False)
-    full_name = models.CharField(max_length=255)
-    post = models.CharField(max_length=255)
-    name_organization = models.CharField(max_length=255)
-    address_organization = models.CharField(max_length=255)
-    # Добавляем внешний ключ к другой модели
-    id_user = models.ForeignKey(
-        Users,
-        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_user',  # Имя поля в базе данных
-    )
-
-    class Meta:
-        managed = False
-        db_table = 'employee_organization'
 
 # Статус
 class Status(models.Model):
@@ -60,12 +40,12 @@ class Status(models.Model):
 # Географический объект (услуга)
 class GeographicalObject(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
-    type = models.CharField(max_length=255)
     feature = models.CharField(max_length=255)
+    type = models.CharField(max_length=255)
     size = models.IntegerField(null=True, blank=True)
-    describe = models.CharField(max_length=255, null=True, blank=True)
-    url_photo = models.CharField(max_length=255, null=True, blank=True)
-
+    describe = models.CharField(max_length=1000, null=True, blank=True)
+    url_photo = models.CharField(max_length=1000, null=True, blank=True)
+    status = models.BooleanField()
     class Meta:
         managed = False
         db_table = 'geographical_object'
@@ -75,9 +55,8 @@ class Transport(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
-    describe = models.CharField(max_length=255, null=True, blank=True)
-    url_photo = models.CharField(max_length=255, null=True, blank=True)
-
+    describe = models.CharField(max_length=1000, null=True, blank=True)
+    url_photo = models.CharField(max_length=1000, null=True, blank=True)
     class Meta:
         managed = False
         db_table = 'transport'
@@ -85,28 +64,26 @@ class Transport(models.Model):
 # Марсианская станция (заявка)
 class MarsStation(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
-    landing_date = models.IntegerField()
-    location = models.CharField(max_length=255)
-
+    type_status = models.CharField(max_length=255)
+    data_create = models.DateField()
+    data_from = models.DateField()
+    data_close = models.DateField()
     # Добавляем внешний ключ к другой модели
-    id_employee_organization = models.ForeignKey(
-        EmployeeOrganization,
+    id_scientist = models.ForeignKey(
+        Scientist,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_employee_organization',  # Имя поля в базе данных
+        db_column='id_scientist',  # Имя поля в базе данных
     )
-
-    id_employee_space_agency = models.ForeignKey(
-        EmployeeSpaceAgency,
+    id_transport = models.ForeignKey(
+        Transport,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_employee_space_agency',  # Имя поля в базе данных
+        db_column='id_transport',  # Имя поля в базе данных
     )
-
     id_status = models.ForeignKey(
         Status,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_status',  # Имя поля в базе данных
     )
-
     class Meta:
         managed = False
         db_table = 'mars_station'
@@ -121,19 +98,13 @@ class Location(models.Model):
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_geographical_object',  # Имя поля в базе данных
     )
-    id_transport = models.ForeignKey(
-        Transport,
-        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_transport',  # Имя поля в базе данных
-    )
+
     id_mars_station = models.ForeignKey(
         MarsStation,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_mars_station',  # Имя поля в базе данных
         related_name='id_mars_station_location',  # Пользовательское имя
     )
-    purpose = models.CharField(max_length=255)
-    results = models.CharField(max_length=255)
     class Meta:
         managed = False
         db_table = 'location'

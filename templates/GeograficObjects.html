@@ -12,6 +12,11 @@
                     <img src="{{ GeograficObject.url_photo }}" style="width: 100%; height: 50%;">
                     <p style="font-size: 20px">{{ GeograficObject.feature }}</p>
                 </a>
+                <form method="POST" action="{% url 'delete_geografic_object' %}">
+                    {% csrf_token %}
+                    <input type="text" name="object_id" value="{{ GeograficObject.id }}" style="display: none;">
+                    <button type="submit">Удалить объект</button>
+                </form>
             </div>
         {% empty %}
             <p>Список пуст</p>
