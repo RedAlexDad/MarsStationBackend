@@ -16,11 +16,11 @@
                 <img src={{ data.GeograficObject.url_photo }} class="card-image" style="width: 40%">
             </div>
         </div>
-    <form method="POST" action="{% url 'delete_geografic_object' %}">
-        {% csrf_token %}
-        <input type="text" name="object_id" value="{{ data.GeograficObject.id }}" style="display: none;">
-        <button type="submit">Удалить объект</button>
-    </form>
+{#    <form method="POST" action="{% url 'delete_geografic_object' %}">#}
+{#        {% csrf_token %}#}
+{#        <input type="text" name="object_id" value="{{ data.GeograficObject.id }}" style="display: none;">#}
+{#        <button type="submit">Удалить объект</button>#}
+{#    </form>#}
     </div>
     <div class="grid-container">
         {% for Locations in data.Locations %}
