@@ -346,6 +346,7 @@ class Database():
             self.connection.rollback()
             print("[INFO] [Status] Ошибка при обновление данных:", ex)
 
+    # Неактуально
     def update_status(self, status_task, status_mission, id_mars_station):
         try:
             with self.connection.cursor() as cursor:
@@ -393,101 +394,48 @@ class Database():
             self.connection.rollback()
             print("[INFO] [GeographicalObject] Ошибка при чтение данных:", ex)
 
-    def get_locations(self):
+    #  Находит и выводит данные о географическом объекте с его транспортами
+    def get_geografical_object_and_transports_by_id(self, id_geographical_object):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(
-                    """SELECT
-                            L.id,
-                            GO.feature,
-                            GO.type,
-                            T.name,
-                            T.type,
-                            L.purpose,
-                            L.results,
-                            S.status_mission,
-                            S.status_task
-                        FROM location as L
-                        INNER JOIN geographical_object as GO ON L.id_geographical_object = GO.id
-                        INNER JOIN transport as T ON L.id_transport = T.id
-                        INNER JOIN mars_station as MS ON L.id_mars_station = MS.id
-                        INNER JOIN status as S ON MS.id_status = S.id;
-                    """)
-                # Получаем данные
-                results = cursor.fetchall()
-                # Подтверждение изменений
-                self.connection.commit()
-                print("[INFO] [Location] Данные успешно прочитано")
-
-                database = []
-                for obj in results:
-                    data = {
-                        'id': obj[0],
-                        'feature': obj[1],
-                        'type': obj[2],
-                        'purpose': obj[3],
-                        'results': obj[4],
-                        'status_mission': obj[5],
-                        'status_task': obj[6],
-                    }
-                    database.append(data)
-
-                return database
-        except Exception as ex:
-            # Откат транзакции в случае ошибки
-            self.connection.rollback()
-            print("[INFO] [Location] Ошибка при чтение данных:", ex)
-
-    def get_locations_by_id(self, id_geographical_object):
-        try:
-            with self.connection.cursor() as cursor:
-                cursor.execute(
-                    """SELECT
-                            L.id,
-                            GO.feature,
-                            GO.type,
-                            T.name,
-                            T.type,
-                            T.url_photo,
-                            L.purpose,
-                            L.results,
-                            S.status_mission,
-                            S.status_task
-                        FROM location as L
-                        INNER JOIN geographical_object as GO ON L.id_geographical_object = GO.id
-                        INNER JOIN transport as T ON L.id_transport = T.id
-                        INNER JOIN mars_station as MS ON L.id_mars_station = MS.id
-                        INNER JOIN status as S ON MS.id_status = S.id
-                        WHERE GO.id = %s;
+                    """
+                    SELECT
+                        GO.id,
+                        GO.feature,
+                        GO.type,
+                        GO.size,
+                        GO.describe,
+                        GO.url_photo,
+                        GO.status,
+                        T.id,
+                        T.name,
+                        T.type,
+                        T.describe,
+                        T.url_photo
+                    FROM location as L
+                    INNER JOIN geographical_object as GO ON L.id_geographical_object = GO.id
+                    INNER JOIN mars_station as MS ON L.id_mars_station = MS.id
+                    INNER JOIN transport as T ON MS.id_transport = T.id
+                    WHERE T.id = %s;
                     """, (id_geographical_object, )
                 )
                 # Получаем данные
                 results = cursor.fetchall()
                 # Подтверждение изменений
                 self.connection.commit()
-                print("[INFO] [Location] Данные успешно прочитано")
+                print("[INFO] [get_geografical_object_and_transports_by_id] Данные успешно прочитано")
 
-                database = []
-                for obj in results:
-                    data = {
-                        'l_id': obj[0],
-                        'go_feature': obj[1],
-                        'go_type': obj[2],
-                        't_name': obj[3],
-                        't_type': obj[4],
-                        't_url_photo': obj[5],
-                        'l_purpose': obj[6],
-                        'l_results': obj[7],
-                        'status_mission': obj[8],
-                        'status_task': obj[9],
-                    }
-                    database.append(data)
+                keys = ['ms_id', 'go_id', 'go_feature', 'go_type', 'go_size', 'go_describe', 'go_url_photo', 't_id',
+                        't_name', 't_type', 't_describe', 't_url_photo']
+
+                database = [dict(zip(keys, obj)) for obj in results]
 
                 return database
         except Exception as ex:
             # Откат транзакции в случае ошибки
             self.connection.rollback()
-            print("[INFO] [Location] Ошибка при чтение данных:", ex)
+            print("[INFO] [get_geografical_object_and_transports_by_id] Ошибка при чтение данных:", ex)
 
 # DB = Database()
 # DB.connect()

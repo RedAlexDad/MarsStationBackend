@@ -8,10 +8,10 @@ import json
 from .database import Database
 
 from rest_framework import viewsets
-from bmstu_lab.serializers import GeographicalObjectSerializer
-from bmstu_lab.models import GeographicalObject
+from bmstu_lab.serializers import GeographicalObjectSerializer, TransportSerializer
+from bmstu_lab.models import GeographicalObject, Transport
 
-class StockViewSet(viewsets.ModelViewSet):
+class GeographicalObjectViewSet(viewsets.ModelViewSet):
     """
     API endpoint, который позволяет просматривать и редактировать акции компаний
     """
@@ -19,6 +19,12 @@ class StockViewSet(viewsets.ModelViewSet):
     queryset = GeographicalObject.objects.all()
     # Сериализатор для модели
     serializer_class = GeographicalObjectSerializer
+
+class TransportViewSet(viewsets.ModelViewSet):
+    # queryset всех пользователей для фильтрации по дате последнего изменения
+    queryset = Transport.objects.all()
+    # Сериализатор для модели
+    serializer_class = TransportSerializer
 
 def MainPage(request):
     return render(request, 'main.html')
@@ -37,14 +43,14 @@ def GetGeograficObjects(request):
     }})
 
 def GetGeograficObject(request, id):
-    # DB = Database()
-    # DB.connect()
-    # DB_locations = DB.get_locations_by_id(GeographicalObject.objects.filter(id=id).first().id)
-    # DB.close()
+    DB = Database()
+    DB.connect()
+    DB_transports = DB.get_geografical_object_and_transports_by_id(GeographicalObject.objects.filter(id=id).first().id)
+    DB.close()
     return render(request, 'GeograficObject.html', {'data': {
         'current_date': date.today(),
         'GeograficObject': GeographicalObject.objects.filter(id=id)[0],
-        # 'Locations': DB_locations
+        'Transports': DB_transports
     }})
 
 def Filter(request):
@@ -66,18 +72,9 @@ def Filter(request):
 
     DB = GeographicalObject.objects.all()
 
-    database = []
     # Пройти по каждому объекту и создать словарь с необходимыми значениями
-    for obj in DB:
-        data = {
-            'id': obj.id,
-            'type': obj.type,
-            'feature': obj.feature,
-            'size': obj.size,
-            'describe': obj.describe,
-            'url_photo': obj.url_photo,
-        }
-        database.append(data)
+    keys = ['id', 'type', 'feature', 'size', 'describe', 'url_photo']
+    database = [dict(zip(keys, obj)) for obj in DB]
 
     if filter_field == 'type':
         filtered_services = [service for service in database if filter_keyword.lower() in service['type'].lower()]

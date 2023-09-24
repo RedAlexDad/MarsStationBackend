@@ -23,11 +23,11 @@
 {#    </form>#}
     </div>
     <div class="grid-container">
-        {% for Locations in data.Locations %}
+        {% for Transports in data.Transports %}
             <div class="grid-item">
 {#                <a href="{% url 'about_geografic_object' Location.id %}">#}
-                    <img src="{{ Locations.t_url_photo }}" style="width: 100%; height: 50%;">
-                    <p style="font-size: 20px">{{ Locations.t_name }}</p>
+                    <img src="{{ Transports.t_url_photo }}" style="width: 100%; height: 50%;">
+                    <p style="font-size: 20px">{{ Transports.t_name }}</p>
 {#                </a>#}
             </div>
         {% empty %}

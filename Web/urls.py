@@ -21,15 +21,17 @@ from bmstu_lab import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'GeographicalObject', views.StockViewSet)
+router.register(r'geografic_objects', views.GeographicalObjectViewSet)
+router.register(r'transports', views.TransportViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Начальное меню
-    path('', include(router.urls)),
-    # path('', views.MainPage, name='main'),
+    path('', views.MainPage, name='main'),
     # Начальное меню карты
     path('select_geografic_object/', views.SelectGeograficObject, name='select_geografic_object'),
+    # path('select_geografic_object/', include(router.urls)),
+    # path('', include(router.urls), name='select_geografic_object'),
     # Список географических объектов
     path('geografic_objects/', views.GetGeograficObjects, name='geografic_objects'),
     # Сведения о географических объектов
@@ -39,4 +41,7 @@ urlpatterns = [
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
 
     # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
+
+    # Включите URL-пути для вашего API через include
+    path('api/', include(router.urls)),
 ]
