@@ -16,18 +16,18 @@ Including another URLconf
 # urls.py - соответствие урлам обработчиков(views)
 # templates - папка для шаблонов (html-файлы)
 from django.contrib import admin
-from django.urls import path
-
-# urlpatterns = [
-#     path("admin/", admin.site.urls),
-# ]
-
+from django.urls import path, include
 from bmstu_lab import views
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register(r'GeographicalObject', views.StockViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Начальное меню
-    path('', views.MainPage, name='main'),
+    path('', include(router.urls)),
+    # path('', views.MainPage, name='main'),
     # Начальное меню карты
     path('select_geografic_object/', views.SelectGeograficObject, name='select_geografic_object'),
     # Список географических объектов
@@ -37,5 +37,6 @@ urlpatterns = [
     # Фильтрация
     path('filter/', views.Filter, name='filter'),
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
+
     # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
 ]

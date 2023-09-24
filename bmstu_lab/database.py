@@ -159,24 +159,24 @@ class Database():
                         ('Георгий Тимофеевич Береговой', 'Начальник', 'Межпланетный отдел Центрального научно-исследовательского института машиностроения (ЦНИИмаш) имени академика М. В. Хруничева', '', 4);
                     
                     -- ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ (УСЛУГА)
-                    INSERT INTO geographical_object (type, feature, size, describe, url_photo, status) VALUES
-                        ('Planitia, planitiae', 'Acidalia Planitia', 2300,
+                    INSERT INTO geographical_object (feature, type, size, describe, url_photo, status) VALUES
+                        ('Acidalia Planitia', 'Planitia, planitiae', 2300,
                          'обширная тёмная равнина на Марсе. Размер — около 3 тысяч км, координаты центра — 50° с. ш. 339°. Расположена между вулканическим регионом Тарсис и Землёй Аравия, к северо-востоку от долин Маринера. На севере переходит в Великую Северную равнину, на юге — в равнину Хриса; на восточном краю равнины находится регион Кидония. Диаметр около 3000 км.',
                          'http://themis.asu.edu/files/feature_thumbnails/002acidaliaTN1.jpg',
                          true),
-                        ('Patera, paterae', 'Alba Patera', 530,
+                        ('Alba Patera', 'Patera, paterae', 530,
                          'Огромный низкий вулкан, расположенный в северной части региона Фарсида на планете Марс. Это самый большой по площади вулкан на Марсе: потоки извергнутой из него породы прослеживаются на расстоянии как минимум 1350 км от его пика.',
                          'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg/1280px-Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg',
                          true),
-                        ('Tholus, tholi', 'Albor Tholus', 170,
+                        ('Albor Tholus', 'Tholus, tholi', 170,
                          'Потухший вулкан нагорья Элизий, расположенный на Марсе. Находится к югу от соседних горы Элизий и купола Гекаты. Вулкан достигает 4,5 километров в высоту и 160 километров в диаметре основания.',
                          'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Albor_Tholus_THEMIS.jpg/800px-Albor_Tholus_THEMIS.jpg',
                          true),
-                        ('Planitia, planitiae', 'Amazonis Planitia', 2800,
+                        ('Amazonis Planitia', 'Planitia, planitiae', 2800,
                          'Слабоокрашенная равнина в северной экваториальной области Марса. Довольно молода, породы имеют возраст 10-100 млн. лет. Часть этих пород представляют собой застывшую вулканическую лаву.',
                          'https://upload.wikimedia.org/wikipedia/commons/3/31/26552sharpridges.jpg',
                          true),
-                        ('Terra, terrae', 'Arabia Terra', 5100,
+                        ('Arabia Terra', 'Terra, terrae', 5100,
                          'Большая возвышенная область на севере Марса, которая лежит в основном в четырехугольнике Аравия, но небольшая часть находится в четырехугольнике Маре Ацидалиум. Она густо изрыта кратерами и сильно разрушена.',
                          'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Eden_Patera_THEMIS_day_IR.jpg/1189px-Eden_Patera_THEMIS_day_IR.jpg',
                          true);

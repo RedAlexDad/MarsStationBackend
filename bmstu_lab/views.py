@@ -7,7 +7,18 @@ from django.shortcuts import get_object_or_404
 import json
 from .database import Database
 
-from .models import GeographicalObject
+from rest_framework import viewsets
+from bmstu_lab.serializers import GeographicalObjectSerializer
+from bmstu_lab.models import GeographicalObject
+
+class StockViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint, который позволяет просматривать и редактировать акции компаний
+    """
+    # queryset всех пользователей для фильтрации по дате последнего изменения
+    queryset = GeographicalObject.objects.all()
+    # Сериализатор для модели
+    serializer_class = GeographicalObjectSerializer
 
 def MainPage(request):
     return render(request, 'main.html')
