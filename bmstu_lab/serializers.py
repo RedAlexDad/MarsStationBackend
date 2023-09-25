@@ -1,4 +1,4 @@
-from bmstu_lab.models import GeographicalObject, Transport
+from bmstu_lab.models import GeographicalObject, Transport, MarsStation
 from rest_framework import serializers
 
 
@@ -17,3 +17,8 @@ class TransportSerializer(serializers.ModelSerializer):
 
         # Поля, которые мы сериализуем
         fields = ['id', 'name', 'type', 'describe', 'url_photo']
+
+class MarsStationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarsStation
+        fields = ['id', 'type_status', 'data_create', 'data_from', 'data_close', 'id_scientist', 'id_transport', 'id_status']
