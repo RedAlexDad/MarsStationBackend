@@ -12,11 +12,11 @@ class Users(models.Model):
         db_table = 'users'
 
 # Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
-class Scientist(models.Model):
+class Employee(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     full_name = models.CharField(max_length=255)
     post = models.CharField(max_length=255)
-    name_space_agency = models.CharField(max_length=255)
+    name_organization = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
     # Добавляем внешний ключ к другой модели
     id_user = models.ForeignKey(
@@ -26,7 +26,7 @@ class Scientist(models.Model):
     )
     class Meta:
         managed = False
-        db_table = 'employee_space_agency'
+        db_table = 'employee'
 
 # Статус
 class Status(models.Model):
@@ -69,10 +69,10 @@ class MarsStation(models.Model):
     data_from = models.DateField()
     data_close = models.DateField()
     # Добавляем внешний ключ к другой модели
-    id_scientist = models.ForeignKey(
-        Scientist,
+    id_employee = models.ForeignKey(
+        Employee,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_scientist',  # Имя поля в базе данных
+        db_column='id_employee',  # Имя поля в базе данных
     )
     id_transport = models.ForeignKey(
         Transport,
@@ -105,6 +105,7 @@ class Location(models.Model):
         db_column='id_mars_station',  # Имя поля в базе данных
         related_name='id_mars_station_location',  # Пользовательское имя
     )
+    sequence_number = models.IntegerField()
     class Meta:
         managed = False
         db_table = 'location'

@@ -401,6 +401,7 @@ class Database():
                 cursor.execute(
                     """
                     SELECT
+                        MS.id,
                         GO.id,
                         GO.feature,
                         GO.type,
@@ -408,6 +409,7 @@ class Database():
                         GO.describe,
                         GO.url_photo,
                         GO.status,
+                        L.sequence_number,
                         T.id,
                         T.name,
                         T.type,
@@ -426,11 +428,8 @@ class Database():
                 self.connection.commit()
                 print("[INFO] [get_geografical_object_and_transports_by_id] Данные успешно прочитано")
 
-                keys = ['ms_id', 'go_id', 'go_feature', 'go_type', 'go_size', 'go_describe', 'go_url_photo', 't_id',
-                        't_name', 't_type', 't_describe', 't_url_photo']
-
+                keys = ['MS_id', 'GO_id', 'GO_feature', 'GO_type', 'GO_size', 'GO_describe', 'GO_url_photo', 'GO_status', 'L_sequence_number', 'T_id', 'T_name', 'T_type', 'T_describe', 'T_url_photo']
                 database = [dict(zip(keys, obj)) for obj in results]
-
                 return database
         except Exception as ex:
             # Откат транзакции в случае ошибки
