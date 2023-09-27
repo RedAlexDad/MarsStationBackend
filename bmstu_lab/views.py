@@ -8,7 +8,7 @@ import json
 from .database import Database
 
 from rest_framework import viewsets
-from bmstu_lab.serializers import GeographicalObjectSerializer, TransportSerializer
+from bmstu_lab.serializers import UsersSerializer, StatusSerializer, EmployeeSerializer, LocationSerializer, TransportSerializer, GeographicalObjectSerializer, MarsStationSerializer
 from bmstu_lab.models import GeographicalObject, Transport
 
 class GeographicalObjectViewSet(viewsets.ModelViewSet):

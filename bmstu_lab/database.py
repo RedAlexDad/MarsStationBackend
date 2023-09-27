@@ -367,7 +367,15 @@ class Database():
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT * FROM geographical_object as GO
+                    SELECT 
+                        GO.id,
+                        GO.feature,
+                        GO.type,
+                        GO.size,
+                        GO.describe,
+                        GO.url_photo,
+                        GO.status
+                    FROM geographical_object as GO
                         WHERE GO.status = true;
                     """)
                 # Получаем данные
@@ -376,17 +384,8 @@ class Database():
                 self.connection.commit()
                 print("[INFO] [GeographicalObject] Данные успешно прочитано")
 
-                database = []
-                for obj in results:
-                    data = {
-                        'id': obj[0],
-                        'feature': obj[1],
-                        'type': obj[2],
-                        'describe': obj[3],
-                        'status': obj[4],
-                        'url_photo': obj[5],
-                    }
-                    database.append(data)
+                keys = ['id', 'feature', 'type', 'size', 'describe', 'url_photo', 'status']
+                database = [dict(zip(keys, obj)) for obj in results]
 
                 return database
         except Exception as ex:

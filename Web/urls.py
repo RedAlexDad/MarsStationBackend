@@ -29,7 +29,7 @@ urlpatterns = [
     # Начальное меню
     path('', views.MainPage, name='main'),
     # Начальное меню карты
-    path('select_geografic_object/', views.SelectGeograficObject, name='select_geografic_object'),
+    path('select_menu/', views.SelectGeograficObject, name='select_menu'),
     # path('select_geografic_object/', include(router.urls)),
     # path('', include(router.urls), name='select_geografic_object'),
     # Список географических объектов
@@ -44,4 +44,5 @@ urlpatterns = [
 
     # Включите URL-пути для вашего API через include
     path('api/', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
