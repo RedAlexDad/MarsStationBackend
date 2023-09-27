@@ -17,7 +17,7 @@ Including another URLconf
 # templates - папка для шаблонов (html-файлы)
 from django.contrib import admin
 from django.urls import path, include
-from bmstu_lab import views
+from bmstu_lab import views, APIview
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -39,6 +39,8 @@ urlpatterns = [
     # Фильтрация
     path('filter/', views.Filter, name='filter'),
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
+
+    # path('api/geografic_objects/', APIview.GeograficalObjectAPIView.as_view()),
 
     # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
 

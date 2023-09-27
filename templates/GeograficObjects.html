@@ -5,7 +5,7 @@
 
 {% block content %}
     <div class="grid-container">
-        {% for GeograficObject in data.GeograficObject %}
+        {% for GeograficObject in data %}
             <div class="grid-item">
                 <a href="{% url 'about_geografic_object' GeograficObject.id %}">
 {#                    <img src="{% static 'images/geograf_object/'|add:GeograficObject.feature|add:'.jpg' %}" style="width: 100%; height: 50%;">#}

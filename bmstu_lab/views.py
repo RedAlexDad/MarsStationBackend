@@ -8,8 +8,11 @@ import json
 from .database import Database
 
 from rest_framework import viewsets
+
 from bmstu_lab.serializers import UsersSerializer, StatusSerializer, EmployeeSerializer, LocationSerializer, TransportSerializer, GeographicalObjectSerializer, MarsStationSerializer
 from bmstu_lab.models import GeographicalObject, Transport
+
+from bmstu_lab.APIview import GeograficalObjectAPIView
 
 class GeographicalObjectViewSet(viewsets.ModelViewSet):
     """
@@ -19,6 +22,11 @@ class GeographicalObjectViewSet(viewsets.ModelViewSet):
     queryset = GeographicalObject.objects.all()
     # Сериализатор для модели
     serializer_class = GeographicalObjectSerializer
+
+# Для отображения на сайте в формате JSON
+# @renderer_classes([JSONRenderer])
+# Разрешение для чтения (GET) или аутентификации для остальных методов
+# @permission_classes([IsAuthenticatedOrReadOnly])
 
 class TransportViewSet(viewsets.ModelViewSet):
     # queryset всех пользователей для фильтрации по дате последнего изменения
@@ -33,14 +41,15 @@ def SelectGeograficObject(request):
     return render(request, 'select_geografic_object.html')
 
 def GetGeograficObjects(request):
-    DB = Database()
-    DB.connect()
-    DB_geografical_object_with_status = DB.get_geografical_object_with_status_true()
-    DB.close()
-    return render(request, 'GeograficObjects.html', {'data' : {
-        'current_date': date.today(),
-        'GeograficObject': DB_geografical_object_with_status
-    }})
+    # Вызов класса по API для отображения данных
+    geografical_object_view = GeograficalObjectAPIView()
+    # Получение данных
+    response = geografical_object_view.get(request=request)
+    # Преобразование в JSON типа
+    database = response.data
+    # Заполнение данных в веб-странице
+    return render(request, 'GeograficObjects.html',  database)
+
 
 def GetGeograficObject(request, id):
     DB = Database()
