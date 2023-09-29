@@ -17,12 +17,14 @@ Including another URLconf
 # templates - папка для шаблонов (html-файлы)
 from django.contrib import admin
 from django.urls import path, include
+
+import bmstu_lab.ViewSet
 from bmstu_lab import views, APIview
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'geografic_objects', views.GeographicalObjectViewSet)
-router.register(r'transports', views.TransportViewSet)
+router.register(r'geografic_objects',bmstu_lab.ViewSet.GeographicalObjectViewSet)
+router.register(r'transports', bmstu_lab.ViewSet.TransportViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,13 +40,14 @@ urlpatterns = [
     path('geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
     # Фильтрация
     path('filter/', views.Filter, name='filter'),
+    path('filter-geographical-objects/', views.FilteredGeographicalObjectList.as_view(), name='filter-geographical-objects'),
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
 
     # path('api/geografic_objects/', APIview.GeograficalObjectAPIView.as_view()),
 
     # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
 
-    # Включите URL-пути для вашего API через include
+    # Включим URL-пути для вашего API через include
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

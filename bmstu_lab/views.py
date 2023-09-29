@@ -7,32 +7,23 @@ from django.shortcuts import get_object_or_404
 import json
 from .database import Database
 
-from rest_framework import viewsets
-
-from bmstu_lab.serializers import UsersSerializer, StatusSerializer, EmployeeSerializer, LocationSerializer, TransportSerializer, GeographicalObjectSerializer, MarsStationSerializer
 from bmstu_lab.models import GeographicalObject, Transport
 
-from bmstu_lab.APIview import GeograficalObjectAPIView
+from bmstu_lab.APIview.GeographicalObject import GeograficalObjectAPIView
 
-class GeographicalObjectViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint, который позволяет просматривать и редактировать акции компаний
-    """
-    # queryset всех пользователей для фильтрации по дате последнего изменения
-    queryset = GeographicalObject.objects.all()
-    # Сериализатор для модели
+# Для фильтрации данных
+from bmstu_lab.filters import GeographicalObjectFilter
+
+from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
+from bmstu_lab.serializers import GeographicalObjectSerializer
+
+
+class FilteredGeographicalObjectList(generics.ListAPIView):
     serializer_class = GeographicalObjectSerializer
-
-# Для отображения на сайте в формате JSON
-# @renderer_classes([JSONRenderer])
-# Разрешение для чтения (GET) или аутентификации для остальных методов
-# @permission_classes([IsAuthenticatedOrReadOnly])
-
-class TransportViewSet(viewsets.ModelViewSet):
-    # queryset всех пользователей для фильтрации по дате последнего изменения
-    queryset = Transport.objects.all()
-    # Сериализатор для модели
-    serializer_class = TransportSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = GeographicalObjectFilter
+    queryset = GeographicalObject.objects.all()
 
 def MainPage(request):
     return render(request, 'main.html')
@@ -44,7 +35,7 @@ def GetGeograficObjects(request):
     # Вызов класса по API для отображения данных
     geografical_object_view = GeograficalObjectAPIView()
     # Получение данных
-    response = geografical_object_view.get(request=request)
+    response = geografical_object_view.get_object_with_status(request=request)
     # Преобразование в JSON типа
     database = response.data
     # Заполнение данных в веб-странице
@@ -52,51 +43,47 @@ def GetGeograficObjects(request):
 
 
 def GetGeograficObject(request, id):
-    DB = Database()
-    DB.connect()
-    DB_transports = DB.get_geografical_object_and_transports_by_id(GeographicalObject.objects.filter(id=id).first().id)
-    DB.close()
-    return render(request, 'GeograficObject.html', {'data': {
-        'current_date': date.today(),
-        'GeograficObject': GeographicalObject.objects.filter(id=id)[0],
-        'Transports': DB_transports
-    }})
+    # Вызов класса по API для отображения данных
+    geografical_object_view = GeograficalObjectAPIView()
+    # Получение данных
+    response = geografical_object_view.get_geografical_object_and_transports_by_id(request=request, id=id)
+    # Преобразование в JSON типа
+    database = response.data
+    # Заполнение данных в веб-странице
+    return render(request, 'GeograficObject.html', database)
 
 def Filter(request):
-    filter_keyword = request.GET.get('filter_keyword')
-    filter_field = request.GET.get('filter_field')
+    # Вызов класса по API для отображения данных
+    geografical_object_view = GeograficalObjectAPIView()
+    # Получение данных
+    response = geografical_object_view.filter_geographical_objects(request=request)
+    # Преобразование в JSON типа
+    database = response.data
+    # Заполнение данных в веб-странице
+    return render(request, 'GeograficObject.html', database)
 
-    if not filter_keyword or not filter_field:
-        return HttpResponseBadRequest("Необходимо указать ключевое слово и поле для фильтрации")
 
-    # if not filter_keyword or not filter_field:
-        # messages.error(request, 'Необходимо указать ключевое слово и поле для фильтрации')
-        # return redirect('filter')  # Ссылка на URL, на который мы хотим перенаправить пользователя
 
-    # Преобразовать ключевое слово в строку для поиска в базе данных
-    filter_keyword = str(filter_keyword)
+# def Filter(request):
+#     # Получите параметры фильтрации из запроса
+#     filter_keyword = request.GET.get('filter_keyword')
+#     filter_field = request.GET.get('filter_field')
+#
+#     # Получите начальный queryset
+#     queryset = GeographicalObject.objects.all()
+#
+#     # Если есть параметры фильтрации, примените фильтр
+#     if filter_keyword and filter_field:
+#         filters = {f'{filter_field}__icontains': filter_keyword}
+#         queryset = queryset.filter(**filters)
+#
+#     # Преобразуйте отфильтрованные объекты в JSON
+#     data = serializers.serialize('json', queryset)
+#
+#     # Отправьте JSON в ответе
+#     return JsonResponse({'data': data}, safe=False)
 
-    # Получить список услуг из базы данных
-    filtered_services = []
 
-    DB = GeographicalObject.objects.all()
-
-    # Пройти по каждому объекту и создать словарь с необходимыми значениями
-    keys = ['id', 'type', 'feature', 'size', 'describe', 'url_photo']
-    database = [dict(zip(keys, obj)) for obj in DB]
-
-    if filter_field == 'type':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['type'].lower()]
-    if filter_field == 'feature':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['feature'].lower()]
-    elif filter_field == 'size':
-        filtered_services = [service for service in database if service['size'] == int(filter_keyword)]
-    elif filter_field == 'describe':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['describe'].lower()]
-    else:
-        pass
-
-    return render(request, 'services.html', {'database': filtered_services})
 
 # Удаление объекта по ID, изменяя статус
 def DeleteObjectByID(request):
