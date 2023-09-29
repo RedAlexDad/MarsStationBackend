@@ -14,7 +14,7 @@
                 </a>
                 <form method="POST" action="{% url 'delete_geografic_object' %}">
                     {% csrf_token %}
-                    <input type="text" name="object_id" value="{{ GeograficObject.id }}" style="display: none;">
+                    <input type="text" name="id" value="{{ GeograficObject.id }}" style="display: none;">
                     <button type="submit">Удалить объект</button>
                 </form>
             </div>

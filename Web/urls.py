@@ -18,13 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-import bmstu_lab.ViewSet
-from bmstu_lab import views, APIview
+from bmstu_lab.ViewSet import GeographicalObjectViewSet, TransportViewSet
+from bmstu_lab import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'geografic_objects',bmstu_lab.ViewSet.GeographicalObjectViewSet)
-router.register(r'transports', bmstu_lab.ViewSet.TransportViewSet)
+router.register(r'geografic_objects', GeographicalObjectViewSet)
+router.register(r'transports', TransportViewSet)
 
 urlpatterns = [
     # Панель админа
@@ -45,7 +45,7 @@ urlpatterns = [
     path('geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
 
     # Фильтрация
-    path('filter/', views.Filter, name='filter'),
+    path('geografic_object/', views.Filter, name='filter'),
 
     # Удаление объекта
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),

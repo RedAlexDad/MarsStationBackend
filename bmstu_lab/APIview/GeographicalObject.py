@@ -14,8 +14,6 @@ from bmstu_lab.serializers import GeographicalObjectSerializer, TransportSeriali
 from bmstu_lab.models import GeographicalObject
 
 from bmstu_lab.database import Database
-from django_filters.rest_framework import DjangoFilterBackend
-from bmstu_lab.filters import GeographicalObjectFilter
 
 @api_view(['GET'])
 def get_geographical_objects(request):
@@ -57,28 +55,26 @@ def get_geografical_object_and_transports_by_id(request, id):
 
 @api_view(['GET'])
 def filter_geographical_objects(request):
-    filter_keyword = request.GET.get('filter_keyword')
-    filter_field = request.GET.get('filter_field')
+    # Преобразовать ключевое слово в строку для поиска в базе данных
+    filter_keyword = str(request.GET.get('filter_keyword'))
+    field_name = request.GET.get('field_name')
 
-    if not filter_keyword or not filter_field:
+    if not filter_keyword or not field_name:
         return Response(
             {"error": "Необходимо указать ключевое слово и поле для фильтрации"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Преобразовать ключевое слово в строку для поиска в базе данных
-    filter_keyword = str(filter_keyword)
-
     # Получить список объектов из базы данных
     database = GeographicalObject.objects.all().values('id', 'feature', 'type', 'size', 'describe', 'url_photo', 'status')
 
-    if filter_field == 'type':
+    if field_name == 'type':
         filtered_objects = [obj for obj in database if filter_keyword.lower() in obj['type'].lower()]
-    elif filter_field == 'feature':
+    elif field_name == 'feature':
         filtered_objects = [obj for obj in database if filter_keyword.lower() in obj['feature'].lower()]
-    elif filter_field == 'size':
+    elif field_name == 'size':
         filtered_objects = [obj for obj in database if obj['size'] == int(filter_keyword)]
-    elif filter_field == 'describe':
+    elif field_name == 'describe':
         filtered_objects = [obj for obj in database if filter_keyword.lower() in obj['describe'].lower()]
     else:
         return Response({"error": "Неподдерживаемое поле для фильтрации"}, status=status.HTTP_400_BAD_REQUEST)
@@ -97,6 +93,31 @@ def filter_geographical_objects(request):
     }
 
     return Response({'data': response_data})
+
+@api_view(['POST'])
+def delete_object_by_id(request, id):
+    # Если id передан, попробуйте найти объект для обновления
+    if id is not None:
+        try:
+            DB = Database()
+            DB.connect()
+            DB.update_status_delete_geografical_object(status_task=False, id_geografical_object=id)
+            DB.close()
+
+            geo_object = GeographicalObject.objects.get(id=id)
+            serializer = GeographicalObjectSerializer(geo_object, data=request.data, partial=True)
+        except GeographicalObject.DoesNotExist:
+            return Response({'message': 'Объект не найден'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        # Если id не передан, создайте новый объект
+        serializer = GeographicalObjectSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 def create_geographical_object(request):
@@ -126,6 +147,9 @@ class GeograficalObjectAPIView(APIView):
 
     def filter_geographical_objects(self, request):
         return filter_geographical_objects(request)
+
+    def delete_object_by_id(self, request, id):
+        return delete_object_by_id(request, id)
 
     def post(self, request):
         return create_geographical_object(request)

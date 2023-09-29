@@ -1,26 +1,7 @@
 # views.py - обработчик приложения
-from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.shortcuts import render, redirect
-from datetime import date
-from django.contrib import messages
-from django.shortcuts import get_object_or_404
-import json
-from .database import Database
-
-from bmstu_lab.models import GeographicalObject, Transport
 
 from bmstu_lab.APIview.GeographicalObject import GeograficalObjectAPIView
-
-# Для фильтрации данных
-from bmstu_lab.filters import GeographicalObjectFilter
-
-from rest_framework import generics
-from rest_framework import filters
-from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
-from django_filters.rest_framework import DjangoFilterBackend
-from bmstu_lab.serializers import GeographicalObjectSerializer
-
 
 def MainPage(request):
     return render(request, 'main.html')
@@ -59,39 +40,11 @@ def Filter(request):
     # Заполнение данных в веб-странице
     return render(request, 'GeograficObject.html', database)
 
-
-
-# def Filter(request):
-#     # Получите параметры фильтрации из запроса
-#     filter_keyword = request.GET.get('filter_keyword')
-#     filter_field = request.GET.get('filter_field')
-#
-#     # Получите начальный queryset
-#     queryset = GeographicalObject.objects.all()
-#
-#     # Если есть параметры фильтрации, примените фильтр
-#     if filter_keyword and filter_field:
-#         filters = {f'{filter_field}__icontains': filter_keyword}
-#         queryset = queryset.filter(**filters)
-#
-#     # Преобразуйте отфильтрованные объекты в JSON
-#     data = serializers.serialize('json', queryset)
-#
-#     # Отправьте JSON в ответе
-#     return JsonResponse({'data': data}, safe=False)
-
-
-
 # Удаление объекта по ID, изменяя статус
 def DeleteObjectByID(request):
-    if request.method == 'POST':
-        # Получаем значение object_id из POST-запроса
-        object_id = int(request.POST.get('object_id'))
-        if (object_id is not None):
-            # Выполняем SQL запрос для редактирования статуса
-            DB = Database()
-            DB.connect()
-            DB.update_status_delete_geografical_object(status_task=False, id_geografical_object=object_id)
-            DB.close()
-    # Перенаправим на предыдующую ссылку после успешного удаления
+    # Вызов класса по API для отображения данных
+    geografical_object_view = GeograficalObjectAPIView()
+    # Получение данных
+    geografical_object_view.delete_object_by_id(request=request, id=int(request.POST.get('id')))
+    # Заполнение данных в веб-странице
     return redirect('geografic_objects')

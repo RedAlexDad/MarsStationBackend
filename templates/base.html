@@ -24,7 +24,7 @@
         {% block content %}{% endblock %}
         <form method="GET" action="{% url 'filter' %}">
             <input type="text" name="filter_keyword" placeholder="Введите">
-            <select name="filter_field">
+            <select name="field_name">
                 <option value="feature">Название</option>
                 <option value="type">Тип</option>
                 <option value="size">Площадь</option>
