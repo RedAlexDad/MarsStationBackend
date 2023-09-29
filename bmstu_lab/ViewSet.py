@@ -2,17 +2,17 @@ from rest_framework import viewsets
 
 from bmstu_lab.serializers import UsersSerializer, StatusSerializer, EmployeeSerializer, LocationSerializer, TransportSerializer, GeographicalObjectSerializer, MarsStationSerializer
 from bmstu_lab.models import GeographicalObject, Transport
-
-from bmstu_lab.APIview.GeographicalObject import GeograficalObjectAPIView
+from bmstu_lab.filters import GeographicalObjectFilter
 
 class GeographicalObjectViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint, который позволяет просматривать и редактировать акции компаний
-    """
+    """ API endpoint, который позволяет просматривать и редактировать акции компаний """
     # queryset всех пользователей для фильтрации по дате последнего изменения
     queryset = GeographicalObject.objects.all()
     # Сериализатор для модели
     serializer_class = GeographicalObjectSerializer
+    # Фильтрация объектов
+    filterset_class = GeographicalObjectFilter
+    # Можно еще добавить другие фильтры
 
 # Для отображения на сайте в формате JSON
 # @renderer_classes([JSONRenderer])

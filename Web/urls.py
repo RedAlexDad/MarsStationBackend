@@ -27,25 +27,28 @@ router.register(r'geografic_objects',bmstu_lab.ViewSet.GeographicalObjectViewSet
 router.register(r'transports', bmstu_lab.ViewSet.TransportViewSet)
 
 urlpatterns = [
+    # Панель админа
     path('admin/', admin.site.urls),
+
     # Начальное меню
     path('', views.MainPage, name='main'),
+
     # Начальное меню карты
     path('select_menu/', views.SelectGeograficObject, name='select_menu'),
-    # path('select_geografic_object/', include(router.urls)),
+
+    # Выборка
     # path('', include(router.urls), name='select_geografic_object'),
     # Список географических объектов
     path('geografic_objects/', views.GetGeograficObjects, name='geografic_objects'),
+
     # Сведения о географических объектов
     path('geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
+
     # Фильтрация
     path('filter/', views.Filter, name='filter'),
-    path('filter-geographical-objects/', views.FilteredGeographicalObjectList.as_view(), name='filter-geographical-objects'),
+
+    # Удаление объекта
     path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
-
-    # path('api/geografic_objects/', APIview.GeograficalObjectAPIView.as_view()),
-
-    # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
 
     # Включим URL-пути для вашего API через include
     path('api/', include(router.urls)),

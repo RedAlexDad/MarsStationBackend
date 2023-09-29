@@ -15,15 +15,12 @@ from bmstu_lab.APIview.GeographicalObject import GeograficalObjectAPIView
 from bmstu_lab.filters import GeographicalObjectFilter
 
 from rest_framework import generics
+from rest_framework import filters
+from rest_framework.filters import SearchFilter
+from rest_framework.generics import ListAPIView
 from django_filters.rest_framework import DjangoFilterBackend
 from bmstu_lab.serializers import GeographicalObjectSerializer
 
-
-class FilteredGeographicalObjectList(generics.ListAPIView):
-    serializer_class = GeographicalObjectSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = GeographicalObjectFilter
-    queryset = GeographicalObject.objects.all()
 
 def MainPage(request):
     return render(request, 'main.html')
