@@ -79,6 +79,9 @@ def filter_geographical_objects(request):
     else:
         return Response({"error": "Неподдерживаемое поле для фильтрации"}, status=status.HTTP_400_BAD_REQUEST)
 
+    if len(filtered_objects) == 0:
+        return Response({"error": "Нет содержимого"}, status=status.HTTP_204_NO_CONTENT)
+
     DB = Database()
     DB.connect()
     transports = DB.get_geografical_object_and_transports_by_id(int(filtered_objects[0]['id']))

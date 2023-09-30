@@ -6,9 +6,6 @@ from bmstu_lab.APIview.GeographicalObject import GeograficalObjectAPIView
 def MainPage(request):
     return render(request, 'main.html')
 
-def SelectGeograficObject(request):
-    return render(request, 'select_geografic_object.html')
-
 def GetGeograficObjects(request):
     # Вызов класса по API для отображения данных
     geografical_object_view = GeograficalObjectAPIView()

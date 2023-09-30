@@ -33,11 +33,6 @@ urlpatterns = [
     # Начальное меню
     path('', views.MainPage, name='main'),
 
-    # Начальное меню карты
-    path('select_menu/', views.SelectGeograficObject, name='select_menu'),
-
-    # Выборка
-    # path('', include(router.urls), name='select_geografic_object'),
     # Список географических объектов
     path('geografic_objects/', views.GetGeograficObjects, name='geografic_objects'),
 
