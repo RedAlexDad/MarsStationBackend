@@ -46,3 +46,7 @@ class UsersSerializer(serializers.ModelSerializer):
         model = Users
         fields = '__all__'
 
+
+class GeograficalObjectAndTransports(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'

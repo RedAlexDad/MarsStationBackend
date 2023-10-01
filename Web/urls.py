@@ -24,7 +24,7 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'geografic_objects', GeographicalObjectViewSet)
-router.register(r'transports', TransportViewSet)
+# router.register(r'transports', TransportViewSet)
 
 urlpatterns = [
     # Панель админа

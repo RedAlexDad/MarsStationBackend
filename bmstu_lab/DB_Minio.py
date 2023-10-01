@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from minio import Minio
 import os
 from pathlib import Path
@@ -14,7 +16,7 @@ class DB_Minio():
             # Установка соединения
             self.client = Minio(
                 # адрес сервера
-                endpoint="172.16.93.158:9000",
+                endpoint="192.168.1.53:9000",
                 # логин админа
                 access_key='minioadmin',
                 # пароль админа
@@ -114,14 +116,16 @@ class DB_Minio():
             url = self.client.get_presigned_url(
                 method=method,
                 bucket_name=bucket_name,
-                object_name=object_name
+                object_name=object_name,
+                expires=timedelta(minutes=1),
             )
             print(url)
+            return url
         except Exception as ex:
             print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
 
-DB = DB_Minio()
+# DB = DB_Minio()
 # DB.check_bucket_exists(bucket_name='mars')
 # DB.stat_object(bucket_name='mars', object_name='Farsida.jpg')
 # DB.list_objects(bucket_name='mars')
-DB.get_presigned_url(method='GET', bucket_name='mars', object_name='Farsida.jpg')
+# DB.get_presigned_url(method='GET', bucket_name='mars', object_name='Acidalia Planitia.jpg')

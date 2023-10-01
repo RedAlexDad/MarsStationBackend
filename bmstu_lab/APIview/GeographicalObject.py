@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework import status, generics
-
+from django.shortcuts import get_object_or_404
 
 # Для отображения на сайте в формате JSON
 # from rest_framework.decorators import renderer_classes, permission_classes
@@ -10,11 +10,12 @@ from rest_framework import status, generics
 # Пример разрешения
 # from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from bmstu_lab.serializers import GeographicalObjectSerializer, TransportSerializer
+from bmstu_lab.serializers import GeographicalObjectSerializer, TransportSerializer, GeograficalObjectAndTransports
 from bmstu_lab.models import GeographicalObject
 
 from bmstu_lab.database import Database
 
+# Возвращает список географические объекты
 @api_view(['GET'])
 def get_geographical_objects(request):
     DB = Database()
@@ -24,6 +25,7 @@ def get_geographical_objects(request):
     return Response({'data': GeographicalObjectSerializer(DB_geografical_object, many=True).data})
 
 
+# Возвращает список географические объекты со статусом TRUE (наличие)
 @api_view(['GET'])
 def get_objects_with_status(request):
     DB = Database()
@@ -32,27 +34,24 @@ def get_objects_with_status(request):
     DB.close()
     return Response({'data': GeographicalObjectSerializer(DB_geografical_object_with_status, many=True).data})
 
+# Возвращает данные о географическом объекте
 @api_view(['GET'])
 def get_geografical_object_and_transports_by_id(request, id):
     try:
         DB = Database()
         DB.connect()
-        transports = DB.get_geografical_object_and_transports_by_id(id)
+        database = DB.get_geografical_object_and_transports_by_id(id)
         DB.close()
 
         # Сериализиуем географический объект и транспорт, чтобы получить набор данных в формате JSON
-        geo_serializer = GeographicalObjectSerializer(GeographicalObject.objects.get(id=id))
-        transport_serializer = TransportSerializer(transports, many=True)
+        database_serializer = GeograficalObjectAndTransports(database, many=False)
 
-        response_data = {
-            'GeograficObject': geo_serializer.data,
-            'Transports': transport_serializer.instance,
-        }
-
-        return Response({'data': response_data})
+        return Response(database_serializer.instance[0])
     except GeographicalObject.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
+# Возвращает данные о географическом объекте по фильтру
 @api_view(['GET'])
 def filter_geographical_objects(request):
     # Преобразовать ключевое слово в строку для поиска в базе данных
@@ -97,6 +96,7 @@ def filter_geographical_objects(request):
 
     return Response({'data': response_data})
 
+# Удаляет географический объект по ID
 @api_view(['POST'])
 def delete_object_by_id(request, id):
     # Если id передан, попробуйте найти объект для обновления
@@ -137,6 +137,17 @@ def create_geographical_object(request):
     )
 
     return Response({'post': GeographicalObjectSerializer(post_new).data})
+
+
+# Удаляет географический объект по ID
+@api_view(['DELETE'])
+def delete_detail(request, pk, format=None):
+    """
+    Удаляет информацию об акции
+    """
+    geografical_object = get_object_or_404(GeographicalObject, pk=pk)
+    geografical_object.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GeograficalObjectAPIView(APIView):
     def get(self, request):

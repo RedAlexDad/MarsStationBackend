@@ -1,5 +1,6 @@
 import psycopg2
 from prettytable import PrettyTable
+from bmstu_lab.DB_Minio import DB_Minio
 
 class Database():
     # Подключение к БД
@@ -387,6 +388,13 @@ class Database():
                 keys = ['id', 'feature', 'type', 'size', 'describe', 'url_photo', 'status']
                 database = [dict(zip(keys, obj)) for obj in results]
 
+                for obj in database:
+                    try:
+                        DB = DB_Minio()
+                        obj['url_photo'] = DB.get_presigned_url(method='GET', bucket_name='mars', object_name=obj['feature'] + '.jpg')
+                    except Exception as e:
+                        print(f"Ошибка при обработке объекта {obj['feature']}: {str(e)}")
+
                 return database
         except Exception as ex:
             # Откат транзакции в случае ошибки
@@ -429,6 +437,14 @@ class Database():
 
                 keys = ['MS_id', 'GO_id', 'GO_feature', 'GO_type', 'GO_size', 'GO_describe', 'GO_url_photo', 'GO_status', 'L_sequence_number', 'T_id', 'T_name', 'T_type', 'T_describe', 'T_url_photo']
                 database = [dict(zip(keys, obj)) for obj in results]
+
+                try:
+                    DB = DB_Minio()
+                    database[0]['GO_url_photo'] = DB.get_presigned_url(method='GET', bucket_name='mars', object_name=database[0]['GO_feature'] + '.jpg')
+                    database[0]['T_url_photo'] = DB.get_presigned_url(method='GET', bucket_name='mars', object_name=database[0]['T_name'] + '.jpg')
+                except Exception as ex:
+                    print(f"Ошибка при обработке объекта {database[0]['feature']}: {str(ex)}")
+
                 return database
         except Exception as ex:
             # Откат транзакции в случае ошибки
