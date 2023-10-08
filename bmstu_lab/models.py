@@ -28,15 +28,6 @@ class Employee(models.Model):
         managed = False
         db_table = 'employee'
 
-# Статус
-class Status(models.Model):
-    id = models.BigAutoField(primary_key=True, serialize=False)
-    status_task = models.CharField(max_length=255)
-    status_mission = models.CharField(max_length=255)
-    class Meta:
-        managed = False
-        db_table = 'status'
-
 # Географический объект (услуга)
 class GeographicalObject(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
@@ -79,11 +70,8 @@ class MarsStation(models.Model):
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_transport',  # Имя поля в базе данных
     )
-    id_status = models.ForeignKey(
-        Status,
-        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_status',  # Имя поля в базе данных
-    )
+    status_task = models.IntegerField()
+    status_mission = models.IntegerField()
     class Meta:
         managed = False
         db_table = 'mars_station'

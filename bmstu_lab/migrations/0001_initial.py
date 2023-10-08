@@ -58,21 +58,11 @@ class Migration(migrations.Migration):
                 ("data_create", models.DateField()),
                 ("data_from", models.DateField()),
                 ("data_close", models.DateField()),
+                ("status_task", models.IntegerField()),
+                ("status_mission", models.IntegerField()),
             ],
             options={
                 "db_table": "mars_station",
-                "managed": False,
-            },
-        ),
-        migrations.CreateModel(
-            name="Status",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("status_task", models.CharField(max_length=255)),
-                ("status_mission", models.CharField(max_length=255)),
-            ],
-            options={
-                "db_table": "status",
                 "managed": False,
             },
         ),
@@ -121,10 +111,6 @@ class Migration(migrations.Migration):
                 ALTER TABLE mars_station
                 ADD CONSTRAINT FR_mars_station_of_scientist
                     FOREIGN KEY (id_employee) REFERENCES employee (id);
-
-                ALTER TABLE mars_station
-                ADD CONSTRAINT FR_mars_station_of_status
-                    FOREIGN KEY (id_status) REFERENCES status (id);
 
                 ALTER TABLE employee
                 ADD CONSTRAINT FR_employee_organization_of_users

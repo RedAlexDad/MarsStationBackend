@@ -1,4 +1,4 @@
-from bmstu_lab.models import MarsStation, Employee, Location, GeographicalObject, Status, Users, Transport
+from bmstu_lab.models import MarsStation, Employee, Location, GeographicalObject, Users, Transport
 from rest_framework import serializers
 
 class GeographicalObjectSerializer(serializers.ModelSerializer):
@@ -34,11 +34,6 @@ class MarsStationSerializer(serializers.ModelSerializer):
         model = MarsStation
         # fields = ['id', 'type_status', 'data_create', 'data_from', 'data_close', 'id_scientist', 'id_transport', 'id_status']
         # Либо весь поля записываем
-        fields = '__all__'
-
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
         fields = '__all__'
 
 class UsersSerializer(serializers.ModelSerializer):

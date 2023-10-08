@@ -119,7 +119,7 @@ class DB_Minio():
                 object_name=object_name,
                 expires=timedelta(minutes=1),
             )
-            print(url)
+            # print(url)
             return url
         except Exception as ex:
             print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
