@@ -1,0 +1,27 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Информация о географического объекта
+        {{ data.feature }}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static '/css/main_menu.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/card_item.css' %}">
+</head>
+<body>
+
+<div class="background-image">
+    <div class="container-item" style="width: 80%; top: 0px; position: relative; margin: 0 auto;">
+        <div class="wrapper">
+            <img src="{{ data.url_photo }}" style="width: 30%; height: auto;">
+            <h1> {{ data.feature }} </h1>
+            <p>Тип местности: {{ data.type }}</p>
+            <p>Площадь: {{ data.size }}</p>
+            {% if data.describe %}
+                <p>Описание: {{ data.describe }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

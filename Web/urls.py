@@ -17,18 +17,21 @@ Including another URLconf
 # templates - папка для шаблонов (html-файлы)
 from django.contrib import admin
 from django.urls import path
-
-# urlpatterns = [
-#     path("admin/", admin.site.urls),
-# ]
-
 from bmstu_lab import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('hello/', views.hello),
-    path('', views.GetOrders),
-    path('order/<int:id>/', views.GetOrder, name='order_url'),
-    path('sendText', views.sendText, name='sendText'),
-    path('filter/', views.filter, name='filter'),
+
+    # Начальное меню
+    path('', views.MainPage, name='main'),
+
+    # Список географических объектов
+    path('geographical_objects/', views.GetGeographicalObjects, name='geographical_objects'),
+
+    # Сведения о географических объектов
+    path('geographical_object/<int:id>/', views.GetGeographicalObject, name='about_geographical_object'),
+
+    # Фильтрация
+    path('geographical_object/', views.Filter, name='filter'),
+
 ]

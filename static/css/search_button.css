@@ -1,0 +1,80 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css");
+
+.header {
+    background-color: transparent;
+    width: 100%;
+    position: absolute;
+    top: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /*padding: 20px;*/
+    z-index: 1;
+}
+
+.search-box {
+    width: fit-content;
+    height: fit-content;
+    position: relative;
+}
+
+.input-search {
+    height: 50px;
+    width: 250px;
+    border-style: none;
+    padding: 10px;
+    font-size: 18px;
+    letter-spacing: 2px;
+    outline: none;
+    border-radius: 25px; /* Укругляем рамку */
+    transition: all .5s ease-in-out;
+    background-color: #FF6A00FF;
+    padding-right: 40px;
+    color: #fff;
+}
+
+.input-search::placeholder {
+    color: rgba(255, 255, 255, .5);
+    font-size: 18px;
+    letter-spacing: 2px;
+    font-weight: 100;
+}
+
+.btn-search {
+    width: 50px;
+    height: 70px;
+    border-style: none;
+    font-size: 20px;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    border-radius: 50%;
+    position: absolute;
+    right: 0px;
+    color: #ffffff;
+    background-color: transparent;
+    pointer-events: painted;
+    z-index: 2;
+}
+
+.btn-search:focus ~ .input-search, .input-search:focus {
+    width: 350px;
+    border-radius: 0px;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, .5);
+    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+}
+
+.filter-field {
+    height: 67px;
+    width: 200px;
+    font-size: 18px;
+    border-style: none;
+    padding: 10px;
+    outline: none;
+    border-radius: 25px; /* Укругляем рамку */
+    background-color: #FF6A00FF;
+    color: #fff;
+    margin-right: 10px;
+    transition: all .5s ease-in-out;
+}

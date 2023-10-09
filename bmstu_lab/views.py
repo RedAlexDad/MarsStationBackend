@@ -1,140 +1,93 @@
 # views.py - обработчик приложения
-from django.http import HttpResponse, Http404, HttpResponseBadRequest
-from django.shortcuts import render, redirect
-from datetime import date
-from django.contrib import messages
-from django.shortcuts import get_object_or_404
-
-
-def hello(request):
-    # Возврат функции без вложенных полей
-    # return render(request, 'index.html', {
-    #     'current_date': date.today()
-    # })
-    # С вложенным полями
-    # return render(request, 'index.html', {'data': {'current_date': date.today()}})
-    return render(request, 'index.html', {'data': {
-        'current_date': date.today(),
-        'list': ['python', 'django', 'html']
-    }})
-
-# def GetOrders(request):
-#     return render(request, 'orders.html', {'data' : {
-#         'current_date': date.today(),
-#         'orders': [
-#             {'title': 'Книга с картинками', 'id': 1},
-#             {'title': 'Бутылка с водой', 'id': 2},
-#             {'title': 'Коврик для мышки', 'id': 3},
-#         ]
-#     }})
-
-# Географические объекты Марса
-# Каньоны : Копрат, Титона, Эос, Капри и Ганг
-# Равнины : Утопия, Эллада, Фарсида, Элизий, Амазония, Хриса
-# Моря : Большой Сирт, Ацидалийское
-# Расщелины : Офир, Ио, Кандор, Мелас
-# Горы : Фарсида, Олимп (в 3 раза выше Эвереста)
-# Вулканы - горы : Аскрийская, Арсия, Павлина
-# Вулканы - купола : Альбор, Гекаты
-# Земля : Ксанфа
-# Кратеры : Оудеманс, Эберсвальд
-# Плато : Тарсис с гигантскими вулканами
-# Полярные шапки : северная и южная
-# Долина : Маринера (в несколько раз превышает Большой Каньон в Америке)
-# Световые люки : черные отверстия ведущие в подземные лавовые трубы Марса; люди в будущем смогут их использовать для укрытия
-# Лабиринт ночи : Над которым постоянно висит странный кристаллический туман копирующий очертания этого региона
+from django.http import Http404
+from django.shortcuts import render
 
 database = [
-    {'id': 1, 'name': 'Копрат',  'landing_risk': 10, 'research_status': 'Не изучено', 'ID_astronaut': 0, 'ID_spaceship': 0},
-    {'id': 2, 'name': 'Титона',  'landing_risk': 80, 'research_status': 'Изучено', 'ID_astronaut': 2, 'ID_spaceship': 0},
-    {'id': 3, 'name': 'Фарсида', 'landing_risk': 50, 'research_status': 'Не изучено', 'ID_astronaut': 1, 'ID_spaceship': 1},
-    {'id': 4, 'name': 'Ксанфа',  'landing_risk': 75, 'research_status': 'Не изучено', 'ID_astronaut': 4, 'ID_spaceship': 1},
-    {'id': 5, 'name': 'Мелас',   'landing_risk': 25, 'research_status': 'Изучено', 'ID_astronaut': 3, 'ID_spaceship': 1}
+    {
+        'id': 1,
+        'feature': 'Acidalia Planitia',
+        'type': 'Planitia, planitiae',
+        'size': 2300,
+        'describe': 'обширная тёмная равнина на Марсе. Размер — около 3 тысяч км, координаты центра — 50° с. ш. 339°. Расположена между вулканическим регионом Тарсис и Землёй Аравия, к северо-востоку от долин Маринера. На севере переходит в Великую Северную равнину, на юге — в равнину Хриса; на восточном краю равнины находится регион Кидония. Диаметр около 3000 км.',
+        'url_photo': 'http://themis.asu.edu/files/feature_thumbnails/002acidaliaTN1.jpg',
+        'status': True
+    },
+    {
+        'id': 2,
+        'feature': 'Alba Patera',
+        'type': 'Patera, paterae',
+        'size': 530,
+        'describe': 'Огромный низкий вулкан, расположенный в северной части региона Фарсида на планете Марс. Это самый большой по площади вулкан на Марсе: потоки извергнутой из него породы прослеживаются на расстоянии как минимум 1350 км от его пика.',
+        'url_photo': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg/1280px-Tharsis_-_Valles_Marineris_MOLA_shaded_colorized_zoom_32.jpg',
+        'status': True
+    },
+    {
+        'id': 3,
+        'feature': 'Albor Tholus',
+        'type': 'Tholus, tholi',
+        'size': 170,
+        'describe': 'Потухший вулкан нагорья Элизий, расположенный на Марсе. Находится к югу от соседних горы Элизий и купола Гекаты. Вулкан достигает 4,5 километров в высоту и 160 километров в диаметре основания.',
+        'url_photo': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Albor_Tholus_THEMIS.jpg/800px-Albor_Tholus_THEMIS.jpg',
+        'status': True
+    },
+    {
+        'id': 4,
+        'feature': 'Amazonis Planitia',
+        'type': 'Planitia, planitiae',
+        'size': 2800,
+        'describe': 'Слабоокрашенная равнина в северной экваториальной области Марса. Довольно молода, породы имеют возраст 10-100 млн. лет. Часть этих пород представляют собой застывшую вулканическую лаву.',
+        'url_photo': 'https://upload.wikimedia.org/wikipedia/commons/3/31/26552sharpridges.jpg',
+        'status': True
+    },
+    {
+        'id': 5,
+        'feature': 'Arabia Terra',
+        'type': 'Terra, terrae',
+        'size': 5100,
+        'describe': 'Большая возвышенная область на севере Марса, которая лежит в основном в четырехугольнике Аравия, но небольшая часть находится в четырехугольнике Маре Ацидалиум. Она густо изрыта кратерами и сильно разрушена.',
+        'url_photo': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Eden_Patera_THEMIS_day_IR.jpg/1189px-Eden_Patera_THEMIS_day_IR.jpg',
+        'status': True
+    }
 ]
 
-def GetOrders(request):
-    return render(request, 'orders.html', {'data' : {
-        'current_date': date.today(),
-        'orders': database
-    }})
+
+# Основная страница
+def MainPage(request):
+    return render(request, 'main.html')
 
 
-# Для маршрутизации, переключает страницу по ID карточек
-# def GetOrder(request, id):
-#     return render(request, 'order.html', {'data' : {
-#         'current_date': date.today(),
-#         'id': id,
-#         # 'name': name,
-#         # 'landing_risk': landing_risk,
-#         # 'research_status': research_status,
-#         # 'ID_astronaut': ID_astronaut,
-#         # 'ID_spaceship': ID_spaceship
-#     }})
+# Список географических объектов
+def GetGeographicalObjects(request):
+    response = {'data': database}
+    return render(request, 'geographical_objects.html', response)
 
-def GetOrder(request, id):
+
+# Информация о географическом объекте
+def GetGeographicalObject(request, id):
     # Найдем объект в списке по 'id'
-    order = None
+    geographical_object = None
     for obj in database:
         if obj['id'] == id:
-            order = obj
+            geographical_object = obj
             break
 
-    if order is None:
+    if geographical_object is None:
         raise Http404("Объект не найден")
 
-    return render(request, 'order.html', {'data': {
-        'current_date': date.today(),
-        'order': order
-    }})
+    response = {'data': geographical_object}
+
+    return render(request, 'geographical_object.html', response)
 
 
-def sendText(request):
-    if request.method == 'POST':
-        # Получить значение передаваемого параметра 'text' из POST-запроса
-        input_text = request.POST.get('text', '')
+# Фильтрация
+def Filter(request):
+    filter_keyword = str(request.GET.get('filter_keyword'))
 
-        # Выполнить нужные действия с полученными данными
-        # Например, можно сохранить их в базу данных или выполнить какую-то логику
-        # В данном случае, мы просто вернем полученный текст в ответе
-        response_text = f"Вы ввели: {input_text}"
+    filtered_objects = [obj for obj in database if filter_keyword.lower() in obj['feature'].lower()] or None
 
-        # Вернуть ответ с результатом
-        return HttpResponse(response_text)
-    else:
-        # Если это не POST-запрос, можно выполнить другую логику, если это необходимо
-        # Например, можно вернуть страницу с формой для ввода текста
-        return render(request, 'base.html')
+    if filtered_objects is None:
+        raise Http404("Объект не найден")
 
-def filter(request):
-    filter_keyword = request.GET.get('filter_keyword')
-    filter_field = request.GET.get('filter_field')
+    response = {'data': filtered_objects[0]}
 
-    if not filter_keyword or not filter_field:
-        return HttpResponseBadRequest("Необходимо указать ключевое слово и поле для фильтрации")
-
-    # if not filter_keyword or not filter_field:
-        # messages.error(request, 'Необходимо указать ключевое слово и поле для фильтрации')
-        # return redirect('filter')  # Ссылка на URL, на который мы хотим перенаправить пользователя
-
-    # Преобразовать ключевое слово в строку для поиска в базе данных
-    filter_keyword = str(filter_keyword)
-
-    # Получить список услуг из базы данных
-    filtered_services = []
-
-    if filter_field == 'name':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['name'].lower()]
-    elif filter_field == 'landing_risk':
-        filtered_services = [service for service in database if service['landing_risk'] == int(filter_keyword)]
-    elif filter_field == 'research_status':
-        filtered_services = [service for service in database if filter_keyword.lower() in service['research_status']]
-    elif filter_field == 'ID_astronaut':
-        filtered_services = [service for service in database if service['ID_astronaut'] == int(filter_keyword)]
-    elif filter_field == 'ID_spaceship':
-        filtered_services = [service for service in database if service['ID_spaceship'] == int(filter_keyword)]
-
-    else:
-        pass
-
-    return render(request, 'services.html', {'database': filtered_services})
-
+    return render(request, 'geographical_object.html', response)
