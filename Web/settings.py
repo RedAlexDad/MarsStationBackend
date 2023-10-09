@@ -79,7 +79,7 @@ WSGI_APPLICATION = "Web.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mars",
+        "NAME": 'mars_lab2',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'localhost',

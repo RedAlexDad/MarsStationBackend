@@ -1,37 +1,27 @@
-{# Наследование шаблонов #}
-{# Наследование шаблонов позволяет создать основной шаблон, который содержит общие элементы, а частные места будут переопределять наследники. #}
-{# Места, которые могут быть переопределены помечаются тегами {% block %} #}
 {% load static %}
 <!doctype html>
 <html lang="en" class="h-100">
-    <head>
-        <meta charset="utf-8">
-        <title>{% block title %}{% endblock %}</title>
-        <link rel="stylesheet" type="text/css" href="{% static '/css/menu.css' %}">
-{#        <link rel="stylesheet" type="text/css" href="{% static '/css/globals.css'%}">#}
-        <link rel="stylesheet" type="text/css" href="{% static '/css/frame.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static '/css/select_geografic_object.css' %}">
-    </head>
-    <body>
-{#        <div class="rectangle-3">#}
-{#            <div class="slide.overlap-group-2.rectangle-3.text-wrapper">Выберите географический объект</div>#}
-{#        </div>#}
-        <div class="background-image">
-            <img src="{% static 'images/map_mars.jpg' %}" alt="Фоновое изображение">
-        </div>
-        <h1 style="color: #cccccc; background-color: #3b3b3b"> Выберите географические объекты для марсианских миссий </h1>
-        {# Наследование шаблонизации #}
-        {% block content %}{% endblock %}
-        <form method="GET" action="{% url 'filter' %}">
-            <input type="text" name="filter_keyword" placeholder="Введите">
-            <select name="filter_field">
-                <option value="feature">Название</option>
-                <option value="type">Тип</option>
-                <option value="size">Площадь</option>
-                <option value="named_in_year">Описание</option>
-            </select>
-            <button type="submit">Применить фильтр</button>
-        </form>
-    </body>
-</html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static '/css/main_menu.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/card_item.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/search_button.css' %}">
+</head>
+<body>
 
+{% block content %}{% endblock %}
+
+<div class="header">
+    <div class="search-box">
+        <form method="GET" action="{% url 'filter' %}">
+            <button class="btn-search" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+            <input class="input-search" type="text" name="filter_keyword" placeholder="Введите название...">
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

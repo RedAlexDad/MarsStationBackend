@@ -1,24 +1,19 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="{% static 'css/globals.css' %}">
-    <link rel="stylesheet" href="{% static 'css/frame.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/main_space.css' %}">
+    <title>Document</title>
 </head>
 <body>
-<div class="slide">
-    <img class="image" src="{% static 'images/main.png' %}" alt="Фоновое изображение Марса">
-    <div class="overlap-group">
-        <div class="rectangle-3"></div>
-        <div class="rectangle-2">
-            <a class="text-wrapper" href="{% url 'select_geografic_object' %}" style="font-size: 40px">
-                 <span>
-                    Начать
-                </span>
-            </a>
-        </div>
-        <div class="rectangle"></div>
-    </div>
+
+<div class="container">
+    <div class="planet"></div>
+    <a class="orbit" href="{% url 'geographical_objects' %}">
+        <div class="moon"></div>
+    </a>
 </div>
 </body>
 </html>

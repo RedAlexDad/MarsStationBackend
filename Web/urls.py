@@ -14,28 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 # urls.py - соответствие урлам обработчиков(views)
-# templates - папка для шаблонов (html-файлы)
 from django.contrib import admin
 from django.urls import path
-
-# urlpatterns = [
-#     path("admin/", admin.site.urls),
-# ]
-
 from bmstu_lab import views
 
 urlpatterns = [
+    # Панель администратора
     path('admin/', admin.site.urls),
     # Начальное меню
     path('', views.MainPage, name='main'),
-    # Начальное меню карты
-    path('select_geografic_object/', views.SelectGeograficObject, name='select_geografic_object'),
     # Список географических объектов
-    path('geografic_objects/', views.GetGeograficObjects, name='geografic_objects'),
+    path('geographical_objects/', views.GetGeographicalObjects, name='geographical_objects'),
     # Сведения о географических объектов
-    path('geografic_object/<int:id>/', views.GetGeograficObject, name='about_geografic_object'),
+    path('geographical_object/<int:id>/', views.GetGeographicalObject, name='about_geographical_object'),
     # Фильтрация
-    path('filter/', views.Filter, name='filter'),
-    path('delete_geografic_object/', views.DeleteObjectByID, name='delete_geografic_object'),
-    # path('geografic_objects/', views.DeleteObjectByID, name='delete_object'),
+    path('geographical_object/', views.Filter, name='filter'),
+    # Удаление объекта
+    path('delete_geographical_object/', views.DeleteObjectByID, name='delete_geographical_object'),
 ]
