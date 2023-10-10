@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
 from bmstu_lab import views
 from rest_framework import routers
 
@@ -37,28 +36,29 @@ urlpatterns = [
 
     # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
     # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку
-    path(r'api/geographical_objects/', views.GET_GeographicalObjectsList),
-    path(r'api/geographical_objects/<int:pk>/', views.GET_GeographicalObject),
-    path(r'api/geographical_objects/create/', views.POST_GeograficObject),
-    path(r'api/geographical_objects/<int:pk>/update/', views.PUT_GeograficObject),
-    path(r'api/geographical_objects/<int:pk>/delete/', views.DELETE_GeograficObject),
-    path(r'api/geographical_objects/<int:pk>/create_service_in_task/', views.POST_GeograficObject_IN_MarsStation),
-    path(r'api/geographical_objects/filtration/', views.GET_GeographicalObjectFiltration),
+    path(r'api/geographical_object_list/', views.GET_GeographicalObjectsList),
+    path(r'api/geographical_object/<int:pk>/', views.GET_GeographicalObject),
+    path(r'api/geographical_object/', views.GET_GeographicalObject),
+    path(r'api/geographical_object/create/', views.POST_GeograficObject),
+    path(r'api/geographical_object/<int:pk>/update/', views.PUT_GeograficObject),
+    path(r'api/geographical_object/<int:pk>/delete/', views.DELETE_GeograficObject),
+    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/<int:pk_task>/', views.POST_GeograficObject_IN_MarsStation),
+    # Список транспортов
+    path(r'api/transport_list/', views.GET_TransportList),
 
     # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
     # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление
-    path(r'api/mars_station/', views.GET_MarsStationList),
+    path(r'api/mars_station_list/', views.GET_MarsStationList),
     path(r'api/mars_station/<int:pk>/', views.GET_MarsStation),
+    path(r'api/mars_station/', views.GET_MarsStation),
     # path(r'api/mars_station/create/', views.POST_MarsStation),
     path(r'api/mars_station/<int:pk>/update/', views.PUT_MarsStation),
     path(r'api/mars_station/<int:pk>/update_by_user/', views.PUT_MarsStation_BY_USER),
     path(r'api/mars_station/<int:pk>/update_by_admin/', views.PUT_MarsStation_BY_ADMIN),
     path(r'api/mars_station/<int:pk>/delete/', views.DELETE_MarsStation),
-    path(r'api/mars_station/filtration/', views.GET_MarsStationFiltration),
 
     # М-М (МЕСТОПОЛОЖЕНИЕ)
     # м-м - удаление из заявки, изменение количества/значения в м-м
     path(r'api/location/<int:pk>/delete/', views.DELETE_Location),
     path(r'api/location/<int:pk>/update/', views.PUT_Location),
-
 ]
