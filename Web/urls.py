@@ -20,12 +20,6 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 
-# Если выводит ошибку о использованном другим сервером, то выполните следующее:
-# Найти нужные PID, чтобы убить их
-# lsof -i :8000
-# Затем
-# kill -9 <PID>
-
 urlpatterns = [
     # Панель админа
     path('admin/', admin.site.urls),
@@ -36,21 +30,22 @@ urlpatterns = [
 
     # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
     # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку
-    path(r'api/geographical_object_list/', views.GET_GeographicalObjectsList),
+    path(r'api/geographical_object/', views.GET_GeographicalObjectsList),
     path(r'api/geographical_object/<int:pk>/', views.GET_GeographicalObject),
-    path(r'api/geographical_object/', views.GET_GeographicalObject),
-    path(r'api/geographical_object/create/', views.POST_GeograficObject),
+    path(r'api/geographical_object/czreate/', views.POST_GeograficObject),
     path(r'api/geographical_object/<int:pk>/update/', views.PUT_GeograficObject),
     path(r'api/geographical_object/<int:pk>/delete/', views.DELETE_GeograficObject),
-    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/<int:pk_task>/', views.POST_GeograficObject_IN_MarsStation),
+    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/', views.POST_GeograficObject_IN_MarsStation),
     # Список транспортов
     path(r'api/transport_list/', views.GET_TransportList),
+    path(r'api/transport_list_station/', views.GET_TransportList_STATION),
+    path(r'api/transport_list_rover/', views.GET_TransportList_ROVER),
+    path(r'api/transport_list_aircraft/', views.GET_TransportList_AIRCRAFT),
 
     # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
     # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление
-    path(r'api/mars_station_list/', views.GET_MarsStationList),
+    path(r'api/mars_station/', views.GET_MarsStationList),
     path(r'api/mars_station/<int:pk>/', views.GET_MarsStation),
-    path(r'api/mars_station/', views.GET_MarsStation),
     # path(r'api/mars_station/create/', views.POST_MarsStation),
     path(r'api/mars_station/<int:pk>/update/', views.PUT_MarsStation),
     path(r'api/mars_station/<int:pk>/update_by_user/', views.PUT_MarsStation_BY_USER),

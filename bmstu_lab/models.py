@@ -56,14 +56,21 @@ class Transport(models.Model):
 class MarsStation(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     type_status = models.CharField(max_length=255)
-    data_create = models.DateField()
-    data_from = models.DateField()
-    data_close = models.DateField()
+    date_create = models.DateField()
+    date_form = models.DateField()
+    date_close = models.DateField()
     # Добавляем внешний ключ к другой модели
     id_employee = models.ForeignKey(
         Employee,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_employee',  # Имя поля в базе данных
+        related_name='id_employee_by_table_employee'
+    )
+    id_moderator = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
+        db_column='id_moderator',  # Имя поля в базе данных
+        related_name='id_moderator_by_table_employee'
     )
     id_transport = models.ForeignKey(
         Transport,
