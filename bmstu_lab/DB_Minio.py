@@ -115,13 +115,15 @@ class DB_Minio():
                 # имя файла в хранилище
                 object_name=object_name
             )
-            print(
-                "last-modified: {0}, size: {1}".format(
-                    result.last_modified, result.size,
-                ),
-            )
+            # print(
+            #     "last-modified: {0}, size: {1}".format(
+            #         result.last_modified, result.size,
+            #     ),
+            # )
+            return result
         except Exception as ex:
-            print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
+            # print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
+            pass
 
     # Выводит список объектов
     def list_objects(self, bucket_name: str):

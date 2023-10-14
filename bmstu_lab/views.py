@@ -12,6 +12,81 @@ from bmstu_lab.DB_Minio import DB_Minio
 from datetime import datetime
 
 # ==================================================================================
+# ДЛЯ ПАГИНАЦИИ
+# ==================================================================================
+from rest_framework.pagination import PageNumberPagination
+
+class CustomPageNumberPagination(PageNumberPagination):
+    # Количество элементов на странице
+    page_size = 5
+    # Параметр запроса для изменения количества элементов на странице
+    page_size_query_param = 'page_size'
+    # Максимальное количество элементов на странице
+    max_page_size = 10
+
+
+@api_view(['GET'])
+def GET_GeographicalObject_PAGINATIONS(request, pk=None, format=None):
+    print('[INFO] API GET [GET_GeographicalObject_PAGINATIONS]')
+
+    # Получим параметры запроса из URL
+    feature = request.GET.get('feature')
+    type = request.GET.get('type')
+    size = request.GET.get('size')
+    describe = request.GET.get('describe')
+    status = request.GET.get('status')
+
+    # Получение данные после запроса с БД (через ORM)
+    geographical_object = GeographicalObject.objects.all()
+
+    # Получение данные с MINIO и обновление ссылок на него (фотография) и измением данные
+    try:
+        try:
+            DB = DB_Minio()
+            for obj in geographical_object:
+                # Проверяет, существует ли такой объект в бакете
+                check_object = DB.stat_object(bucket_name='mars', object_name=obj.feature + '.jpg')
+                if bool(check_object):
+                    url_photo = DB.get_presigned_url(
+                        method='GET', bucket_name='mars',
+                        object_name=obj.feature + '.jpg'
+                    )
+                else:
+                    url_photo = DB.get_presigned_url(
+                        method='GET', bucket_name='mars',
+                        object_name='Default.jpg'
+                    )
+
+                obj.url_photo = url_photo
+                # Сохраняем обновленный объект в БД
+                obj.save()
+        except Exception as ex:
+            print(f"Ошибка при обработке объекта {obj.feature}: {str(ex)}")
+    except Exception as ex:
+        print('Ошибка соединения с БД Minio', ex)
+
+    if feature and type and size and describe and status is None:
+        pass
+    else:
+        # Применим фильтры на основе параметров запроса, если они предоставлены
+        if feature:
+            geographical_object = geographical_object.filter(feature__icontains=feature)
+        if type:
+            geographical_object = geographical_object.filter(type__icontains=type)
+        if size:
+            geographical_object = geographical_object.filter(size=size)
+        if describe:
+            geographical_object = geographical_object.filter(describe__icontains=describe)
+        if status:
+            geographical_object = geographical_object.filter(status=status)
+
+    paginator = CustomPageNumberPagination()
+    result_page = paginator.paginate_queryset(geographical_object, request)
+    geographical_object_serializer = GeographicalObjectSerializer(result_page, many=True)
+
+    return paginator.get_paginated_response(geographical_object_serializer.data)
+
+# ==================================================================================
 # УСЛУГА
 # ==================================================================================
 
@@ -35,10 +110,18 @@ def GET_GeographicalObjectsList(request, format=None):
         try:
             DB = DB_Minio()
             for obj in geographical_object:
-                url_photo = DB.get_presigned_url(
-                    method='GET', bucket_name='mars',
-                    object_name=obj.feature + '.jpg'
-                )
+                # Проверяет, существует ли такой объект в бакете
+                check_object = DB.stat_object(bucket_name='mars', object_name=obj.feature + '.jpg')
+                if bool(check_object):
+                    url_photo = DB.get_presigned_url(
+                        method='GET', bucket_name='mars',
+                        object_name=obj.feature + '.jpg'
+                    )
+                else:
+                    url_photo = DB.get_presigned_url(
+                        method='GET', bucket_name='mars',
+                        object_name='Default.jpg'
+                    )
 
                 obj.url_photo = url_photo
                 # Сохраняем обновленный объект в БД
@@ -54,7 +137,7 @@ def GET_GeographicalObjectsList(request, format=None):
     else:
         # Применим фильтры на основе параметров запроса, если они предоставлены
         if feature:
-            geographical_object = geographical_object.filter(feature=feature)
+            geographical_object = geographical_object.filter(feature__icontains=feature)
         if type:
             geographical_object = geographical_object.filter(type__icontains=type)
         if size:
@@ -77,10 +160,18 @@ def GET_GeographicalObject(request, pk=None, format=None):
         geographical_object = get_object_or_404(GeographicalObject, pk=pk)
         try:
             DB = DB_Minio()
-            url_photo = DB.get_presigned_url(
-                method='GET', bucket_name='mars',
-                object_name=geographical_object.feature + '.jpg'
-            )
+            # Проверяет, существует ли такой объект в бакете
+            check_object = DB.stat_object(bucket_name='mars', object_name=geographical_object.feature + '.jpg')
+            if bool(check_object):
+                url_photo = DB.get_presigned_url(
+                    method='GET', bucket_name='mars',
+                    object_name=geographical_object.feature + '.jpg'
+                )
+            else:
+                url_photo = DB.get_presigned_url(
+                    method='GET', bucket_name='mars',
+                    object_name='Default.jpg'
+                )
             geographical_object.url_photo = url_photo
             geographical_object.save()
         except Exception as ex:
