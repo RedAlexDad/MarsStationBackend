@@ -3,6 +3,7 @@ from datetime import timedelta
 import requests
 from minio import Minio
 import subprocess
+import io
 
 # Launch the MinIO Server
 # minio server ~/minio --console-address :9090
@@ -53,7 +54,6 @@ class DB_Minio():
         except Exception as ex:
             print(f'[ERROR] Не подключить к Minio. \n{ex}')
 
-
     # Для создания бакета
     def add_new_bucket(self, bucket_name: str):
         try:
@@ -79,7 +79,7 @@ class DB_Minio():
             print(f'[ERROR] Не удалось удалить бакет. \n{ex}')
 
     # Для записи объекта в хранилище из файла
-    def fput_object(self, bucket_name: str, object_name: str, file_path: str):
+    def fput_object(self, bucket_name: str, object_name: str, file_path: bytes):
         try:
             self.client.fput_object(
                 # имя бакета
@@ -152,8 +152,31 @@ class DB_Minio():
         except Exception as ex:
             print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
 
+    # Вставляет картинки в бакет с ссылки внешних источников
+    # https://min.io/docs/minio/linux/developers/python/API.html#put_object
+    def put_object_url(self, bucket_name: str, object_name: str, url):
+        try:
+            # Загрузим данные по URL
+            response = requests.get(url)
+            if response.status_code == 200:
+                # Возвращение данные в бинарном виде (в байтах)
+                data = io.BytesIO(response.content)
+                # Сохраните данные в MinIO
+                self.client.put_object(
+                    bucket_name=bucket_name,
+                    object_name=object_name,
+                    data=data,
+                    length=len(response.content)
+                )
+                print(f'[INFO] Успешно загружен объект [{object_name}] из URL')
+            else:
+                print(f'[ERROR] Не удалось получить данные по URL. Код статуса: {response.status_code}')
+        except Exception as ex:
+            print(f'[ERROR] Не удалось загрузить объект из URL в хранилище. \n{ex}')
+
 # DB = DB_Minio()
 # DB.check_bucket_exists(bucket_name='mars')
 # DB.stat_object(bucket_name='mars', object_name='Farsida.jpg')
 # DB.list_objects(bucket_name='mars')
 # DB.get_presigned_url(method='GET', bucket_name='mars', object_name='Acidalia Planitia.jpg')
+# DB.put_object_url(bucket_name='mars', object_name='test_mars.jpg', url='https://kartinkof.club/uploads/posts/2022-09/1662472162_1-kartinkof-club-p-novie-i-krasivie-kartinki-mars-1.jpg')

@@ -30,18 +30,12 @@ urlpatterns = [
 
     # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
     # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку
-    path(r'api/geographical_object/', views.GET_GeographicalObjectsList),
-    path(r'api/geographical_objects/', views.GET_GeographicalObject_PAGINATIONS),
+    path(r'api/geographical_object/', views.GET_GeographicalObjects),
     path(r'api/geographical_object/<int:pk>/', views.GET_GeographicalObject),
     path(r'api/geographical_object/create/', views.POST_GeograficObject),
     path(r'api/geographical_object/<int:pk>/update/', views.PUT_GeograficObject),
     path(r'api/geographical_object/<int:pk>/delete/', views.DELETE_GeograficObject),
     path(r'api/geographical_object/<int:pk_service>/create_service_in_task/', views.POST_GeograficObject_IN_MarsStation),
-    # Список транспортов
-    path(r'api/transport_list/', views.GET_TransportList),
-    path(r'api/transport_list_station/', views.GET_TransportList_STATION),
-    path(r'api/transport_list_rover/', views.GET_TransportList_ROVER),
-    path(r'api/transport_list_aircraft/', views.GET_TransportList_AIRCRAFT),
 
     # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
     # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление

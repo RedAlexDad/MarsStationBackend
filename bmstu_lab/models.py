@@ -36,6 +36,10 @@ class GeographicalObject(models.Model):
     size = models.IntegerField(null=True, blank=True)
     describe = models.CharField(max_length=1000, null=True, blank=True)
     url_photo = models.CharField(max_length=1000, null=True, blank=True)
+    # blank=True позволяет сохранять поле как пустое, если оно не было заполнено.
+    # null=True позволяет полю принимать значение None (null), что полезно, если вы хотите, чтобы поле могло иметь отсутствующее значение.
+    # editable=True позволяет редактировать это поле через административный интерфейс Django или другие методы редактирования, если это необходимо.
+    photo_byte = models.BinaryField(blank=True, null=True, editable=True)
     status = models.BooleanField()
     class Meta:
         managed = False
@@ -48,6 +52,10 @@ class Transport(models.Model):
     type = models.CharField(max_length=255)
     describe = models.CharField(max_length=1000, null=True, blank=True)
     url_photo = models.CharField(max_length=1000, null=True, blank=True)
+    # blank=True позволяет сохранять поле как пустое, если оно не было заполнено.
+    # null=True позволяет полю принимать значение None (null), что полезно, если вы хотите, чтобы поле могло иметь отсутствующее значение.
+    # editable=True позволяет редактировать это поле через административный интерфейс Django или другие методы редактирования, если это необходимо.
+    photo_byte = models.BinaryField(blank=True, null=True, editable=True)
     class Meta:
         managed = False
         db_table = 'transport'
@@ -100,7 +108,6 @@ class Location(models.Model):
         db_column='id_mars_station',  # Имя поля в базе данных
         related_name='id_mars_station_location',  # Пользовательское имя
     )
-    sequence_number = models.IntegerField()
     class Meta:
         managed = False
         db_table = 'location'
