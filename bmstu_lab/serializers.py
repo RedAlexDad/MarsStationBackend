@@ -27,6 +27,12 @@ class TransportSerializer(serializers.ModelSerializer):
         # Либо весь поля записываем
         fields = '__all__'
 
+
+class TypeTransportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transport
+        fields = ['id', 'type']
+
 class MarsStationSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarsStation

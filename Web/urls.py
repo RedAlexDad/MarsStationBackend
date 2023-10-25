@@ -51,4 +51,7 @@ urlpatterns = [
     # м-м - удаление из заявки, изменение количества/значения в м-м
     path(r'api/location/<int:pk>/delete/', views.DELETE_Location),
     path(r'api/location/<int:pk>/update/', views.PUT_Location),
+
+    # Транспорт
+    path(r'api/transport/', views.GET_Transport),
 ]

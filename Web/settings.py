@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "bmstu_lab",
-    "django_filters"
+    "django_filters",
+    # Для проксирования
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -51,7 +53,45 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Для проксирования
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
+
+# Проксирование
+CORS_ALLOWED_ORIGINS = [
+    # Frontend
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # Backend
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+
+CORS_ALLOWED_URLS = [
+    r"^/api/geographical_object/$",
+    r"^/api/geographical_object/\d+/$",
+    r"^/api/geographical_object/create/$",
+    r"^/api/geographical_object/\d+/update/$",
+    r"^/api/geographical_object/\d+/delete/$",
+    r"^/api/geographical_object/\d+/create_service_in_task/$",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "Web.urls"
 
@@ -87,7 +127,6 @@ DATABASES = {
         'PORT': 5432,  # Стандартный порт PostgreSQL
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

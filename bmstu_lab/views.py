@@ -5,7 +5,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from bmstu_lab.serializers import GeographicalObjectSerializer, MarsStationSerializer, LocationSerializer, \
-    TransportSerializer, EmployeeSerializer, UsersSerializer
+    TransportSerializer, EmployeeSerializer, UsersSerializer, TypeTransportSerializer
 from bmstu_lab.models import GeographicalObject, MarsStation, Location, Transport, Employee, Users
 
 from bmstu_lab.DB_Minio import DB_Minio
@@ -16,7 +16,8 @@ import io
 import requests
 # Возвращает список географические объекты
 from rest_framework.pagination import PageNumberPagination
-
+# Время прогрузки и получение данных
+import threading
 
 # ==================================================================================
 # УСЛУГА
@@ -44,31 +45,34 @@ def GET_GeographicalObjects(request, pk=None, format=None):
     # Получение данные после запроса с БД (через ORM)
     geographical_object = GeographicalObject.objects.all()
 
-    # Получение данные с MINIO и обновление ссылок на него (фотография) и измением данные
-    try:
+    def update_url_photo():
+        # Получение данные с MINIO и обновление ссылок на него (фотография) и измением данные
         try:
-            DB = DB_Minio()
-            for obj in geographical_object:
-                # Проверяет, существует ли такой объект в бакете
-                check_object = DB.stat_object(bucket_name='mars', object_name=obj.feature + '.jpg')
-                if bool(check_object):
-                    url_photo = DB.get_presigned_url(
-                        method='GET', bucket_name='mars',
-                        object_name=obj.feature + '.jpg'
-                    )
-                else:
-                    url_photo = DB.get_presigned_url(
-                        method='GET', bucket_name='mars',
-                        object_name='Default.jpg'
-                    )
-
-                obj.url_photo = url_photo
-                # Сохраняем обновленный объект в БД
-                obj.save()
+            try:
+                DB = DB_Minio()
+                for obj in geographical_object:
+                    # Проверяет, существует ли такой объект в бакете
+                    check_object = DB.stat_object(bucket_name='mars', object_name=obj.feature + '.jpg')
+                    if bool(check_object):
+                        obj.url_photo = DB.get_presigned_url(
+                            method='GET', bucket_name='mars',
+                            object_name=obj.feature + '.jpg'
+                        )
+                    else:
+                        obj.url_photo = None
+                    # Сохраняем обновленный объект в БД
+                    obj.save()
+            except Exception as ex:
+                print(f"Ошибка при обработке объекта {obj.feature}: {str(ex)}")
         except Exception as ex:
-            print(f"Ошибка при обработке объекта {obj.feature}: {str(ex)}")
-    except Exception as ex:
-        print('Ошибка соединения с БД Minio', ex)
+            print('Ошибка соединения с БД Minio', ex)
+
+    # Создадим поток для выполнения операций Minio
+    thread = threading.Thread(target=update_url_photo)
+    thread.start()
+
+    # Подождем завершения потока с ожиданием в течение 3 секунд
+    thread.join(timeout=3)
 
     if feature and type and size and describe and status is None:
         pass
@@ -97,24 +101,30 @@ def GET_GeographicalObject(request, pk=None, format=None):
     print('[INFO] API GET [GET_GeographicalObject]')
     if request.method == 'GET':
         geographical_object = get_object_or_404(GeographicalObject, pk=pk)
-        try:
-            DB = DB_Minio()
-            # Проверяет, существует ли такой объект в бакете
-            check_object = DB.stat_object(bucket_name='mars', object_name=geographical_object.feature + '.jpg')
-            if bool(check_object):
-                url_photo = DB.get_presigned_url(
-                    method='GET', bucket_name='mars',
-                    object_name=geographical_object.feature + '.jpg'
-                )
-            else:
-                url_photo = DB.get_presigned_url(
-                    method='GET', bucket_name='mars',
-                    object_name='Default.jpg'
-                )
-            geographical_object.url_photo = url_photo
-            geographical_object.save()
-        except Exception as ex:
-            print(f"Ошибка при обработке объекта {geographical_object.feature}: {str(ex)}")
+        def update_url_photo():
+            try:
+                DB = DB_Minio()
+                # Проверяет, существует ли такой объект в бакете
+                check_object = DB.stat_object(bucket_name='mars', object_name=geographical_object.feature + '.jpg')
+                if bool(check_object):
+                    url_photo = DB.get_presigned_url(
+                        method='GET', bucket_name='mars',
+                        object_name=geographical_object.feature + '.jpg'
+                    )
+                else:
+                    url_photo = None
+
+                geographical_object.url_photo = url_photo
+                geographical_object.save()
+            except Exception as ex:
+                print(f"Ошибка при обработке объекта {geographical_object.feature}: {str(ex)}")
+
+        # Создадим поток для выполнения операций Minio
+        thread = threading.Thread(target=update_url_photo)
+        thread.start()
+
+        # Подождем завершения потока с ожиданием в течение 3 секунд
+        thread.join(timeout=1)
 
         geographical_object_serializer = GeographicalObjectSerializer(geographical_object)
         return Response(geographical_object_serializer.data)
@@ -129,7 +139,7 @@ def process_image_from_url(feature, url_photo):
             # Возврат данных в бинарном виде (в байтах)
             image_data = response.content
 
-            # Используйте Pillow для обработки изображения и сохранения его в формате JPEG
+            # Используем Pillow для обработки изображения и сохранения его в формате JPEG
             try:
                 image = Image.open(io.BytesIO(image_data))
                 image = image.convert('RGB')  # Преобразование изображения в формат RGB
@@ -203,28 +213,19 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
     if mars_station == None:
         # status_task [1: Введен; 2: В работе; 3: Завершена; 4: Отменена; 5: Удалена]
         # status_mission [1: Успех; 2: Потеря; 3: Работает]
-
-        employee = Employee.objects.get(id=request.data['id_employee'])
-
-        # Удаляем status_task, status_mission, id_employee, id_transport из запроса
-        request.data.pop('status_task', None)
-        request.data.pop('status_mission', None)
-        request.data.pop('id_employee', None)
-        request.data.pop('id_transport', None)
-
         mars_station = MarsStation.objects.create(
-            **request.data,
+            date_create=datetime.now(),
             status_task=1,
             status_mission=3,
-            id_employee=employee,
         )
+        print('Create new statement')
 
     # Создание записи в таблице Location для связи между MarsStation и GeographicalObject
     Location.objects.create(
         id_geographical_object=geographical_object,
         id_mars_station=mars_station,
     )
-    return Response('Successfully created', status=status.HTTP_201_CREATED)
+    return Response(f'Successfully created, ID: {mars_station.id}', status=status.HTTP_201_CREATED)
 
 
 # ==================================================================================
@@ -248,12 +249,9 @@ def GET_MarsStationList(request, format=None):
     # Дата ДО
     date_form_before = request.GET.get('date_form_before')
 
-    type_transport = request.GET.get('type_transport')
-
     # Проверяет, пустой запрос на фильтр
     if all(item is None for item in
-           [type_status, status_task, status_mission, date_create, date_close, date_form_after, date_form_before,
-            type_transport]):
+           [type_status, status_task, status_mission, date_create, date_close, date_form_after, date_form_before]):
         # Сериализиуем его, чтобы получить в формате JSON
         mars_station_serializer = MarsStationSerializer(mars_station, many=True)
     else:
@@ -269,24 +267,19 @@ def GET_MarsStationList(request, format=None):
         if date_close:
             mars_station = mars_station.filter(date_close=date_close)
 
-        def filter_and_serialize_transport(type_transport):
-            transport = Transport.objects.filter(type=type_transport)
-            transport_serializer = TransportSerializer(transport, many=True)
-            return Response(transport_serializer.data)
+        # Дата формирования ПОСЛЕ
+        if date_form_after and date_form_before is None:
+            mars_station = mars_station.filter(date_form__gte=date_form_after)
+        # Дата формирования ДО
+        if date_form_after is None and date_form_before:
+            mars_station = mars_station.filter(date_form__lte=date_form_before)
 
-        # Обработка фильтрации по типу транспорта
-        if type_transport:
-            return filter_and_serialize_transport(type_transport)
-
+        # Дата формирования ПОСЛЕ и ДО
         if date_form_after and date_form_before:
-            # Дата формирования ПОСЛЕ и ДО
             if date_form_after > date_form_before:
                 return Response('Mistake! It is impossible to sort when "BEFORE" exceeds "AFTER"!')
             mars_station = mars_station.filter(date_form__gte=date_form_after)
             mars_station = mars_station.filter(date_form__lte=date_form_before)
-        if (date_form_after == None and date_form_before) or (date_form_after and date_form_before == None):
-            return Response(
-                'The sorting date was entered incorrectly! Enter "date_form_after" and "date_form_before" in full!')
 
         # Сериализуем результаты запроса
         mars_station_serializer = MarsStationSerializer(mars_station, many=True)
@@ -308,14 +301,19 @@ def GET_MarsStation(request, pk=None, format=None):
         except Transport.DoesNotExist:
             transport = None  # Транспорт не найден, устанавливаем moderator в None
 
-        employee = get_object_or_404(Employee, id=mars_station.id_employee.id)
+        try:
+            employee = get_object_or_404(Employee, id=mars_station.id_employee.id)
+            try:
+                user = get_object_or_404(Users, id=employee.id_user.id)
+            except Users.DoesNotExist:
+                user = None
+        except Employee.DoesNotExist:
+            employee = None  # Сотрудник не найден, устанавливаем employee в None
 
         try:
             moderator = get_object_or_404(Employee, id=mars_station.id_moderator.id)
         except Employee.DoesNotExist:
             moderator = None  # Модератор не найден, устанавливаем moderator в None
-
-        user = get_object_or_404(Users, id=employee.id_user.id)
 
         locations = Location.objects.filter(id_mars_station=mars_station.id)
         geographical_object_serializer = []
@@ -430,6 +428,75 @@ def DELETE_MarsStation(request, pk, format=None):
     return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
 
 
+# Возвращает список транспортов марсианских станций МАРСОЛЕТЫ
+@api_view(['GET'])
+def GET_TransportList_AIRCRAFT(request, format=None):
+    print('[INFO] API GET [GET_TransportList]')
+    transport = Transport.objects.filter(type='Mars aircraft')
+    # Сериализиуем его, чтобы получить в формате JSON
+    transport_serializer = TransportSerializer(transport, many=True)
+    return Response(transport_serializer.data)
+
+
+# ==================================================================================
+# М-М
+# ==================================================================================
+
+# Обновляет информацию о марсианской станции по ID
+@api_view(['PUT'])
+def PUT_Location(request, pk, format=None):
+    print('[INFO] API PUT [PUT_Location]')
+    location = get_object_or_404(Location, pk=pk)
+
+    # Изменяем значение sequence_number
+    try:
+        try:
+            location.id_geographical_object_id = int(request.data['id_geographical_object'])
+            location.id_mars_station_id = int(request.data['id_mars_station'])
+            # Сохраняем объект Location
+            location.save()
+            location_serializer = LocationSerializer(location)
+            return Response(location_serializer.data)
+        except ValueError:
+            return Response('Invalid sequence number format', status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response('Sequence number not provided in the request', status=status.HTTP_400_BAD_REQUEST)
+
+
+# Удаляет марсианскую станцию по ID
+@api_view(['DELETE'])
+def DELETE_Location(request, pk, format=None):
+    print('[INFO] API DELETE [DELETE_Location]')
+    location = get_object_or_404(Location, pk=pk)
+
+    # Удаляет связанную марсианскую станцию
+    location.id_mars_station.delete()
+    # Затем удалим сам объект Location
+    location.delete()
+
+    return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+
+# ==================================================================================
+# ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О ТРАНСПОРТАХ
+# ==================================================================================
+
+@api_view(['GET'])
+def GET_Transport(request, format=None):
+    print('[INFO] API GET [GET_TransportList]')
+    type_transport = request.GET.get('type')
+
+    # Обработка фильтрации по типу транспорта
+    if type_transport:
+        transport = Transport.objects.filter(type=type_transport)
+    else:
+        transport = Transport.objects.all()
+
+    # Сериализируем список транспортов
+    transport_serializer = TypeTransportSerializer(transport, many=True)
+
+    return Response(transport_serializer.data)
+
+
 # Возвращает список транспортов марсианских станций
 @api_view(['GET'])
 def GET_TransportList(request, format=None):
@@ -458,51 +525,3 @@ def GET_TransportList_ROVER(request, format=None):
     # Сериализиуем его, чтобы получить в формате JSON
     transport_serializer = TransportSerializer(transport, many=True)
     return Response(transport_serializer.data)
-
-
-# Возвращает список транспортов марсианских станций МАРСОЛЕТЫ
-@api_view(['GET'])
-def GET_TransportList_AIRCRAFT(request, format=None):
-    print('[INFO] API GET [GET_TransportList]')
-    transport = Transport.objects.filter(type='Mars aircraft')
-    # Сериализиуем его, чтобы получить в формате JSON
-    transport_serializer = TransportSerializer(transport, many=True)
-    return Response(transport_serializer.data)
-
-
-# ==================================================================================
-# М-М
-# ==================================================================================
-
-# Обновляет информацию о марсианской станции по ID
-@api_view(['PUT'])
-def PUT_Location(request, pk, format=None):
-    print('[INFO] API PUT [PUT_Location]')
-    location = get_object_or_404(Location, pk=pk)
-
-    # Изменяем значение sequence_number
-    try:
-        try:
-            location.sequence_number = int(request.data['sequence_number'])
-            # Сохраняем объект Location
-            location.save()
-            location_serializer = LocationSerializer(location)
-            return Response(location_serializer.data)
-        except ValueError:
-            return Response('Invalid sequence number format', status=status.HTTP_400_BAD_REQUEST)
-    except:
-        return Response('Sequence number not provided in the request', status=status.HTTP_400_BAD_REQUEST)
-
-
-# Удаляет марсианскую станцию по ID
-@api_view(['DELETE'])
-def DELETE_Location(request, pk, format=None):
-    print('[INFO] API DELETE [DELETE_Location]')
-    location = get_object_or_404(Location, pk=pk)
-
-    # Удаляет связанную марсианскую станцию
-    location.id_mars_station.delete()
-    # Затем удалим сам объект Location
-    location.delete()
-
-    return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
