@@ -16,42 +16,53 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from bmstu_lab import views
-from rest_framework import routers
+from rest_framework import routers, permissions
+# SWAGGER
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 router = routers.DefaultRouter()
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Snippets API",
+        default_version='v1',
+        description="Test description",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@snippets.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
+# Запуск сервер Redis
+# redis-server
+# Можно остановить или перезагрузить командой
+# redis-server stop/restart
 
 urlpatterns = [
     # Панель админа
     path('admin/', admin.site.urls),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
     # Включим URL-пути для вашего API через include
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
-    # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
-    # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку
-    path(r'api/geographical_object/', views.GET_GeographicalObjects),
-    path(r'api/geographical_object/<int:pk>/', views.GET_GeographicalObject),
-    path(r'api/geographical_object/create/', views.POST_GeograficObject),
-    path(r'api/geographical_object/<int:pk>/update/', views.PUT_GeograficObject),
-    path(r'api/geographical_object/<int:pk>/delete/', views.DELETE_GeograficObject),
-    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/', views.POST_GeograficObject_IN_MarsStation),
+    # Список аккаунтов
+    path(r'api/users/', views.UsersINFO.as_view()),
+    # Обновление аккаунта
+    path(r'api/users/<int:pk>/update/', views.UsersINFO.as_view()),
+    # Удаление аккаунта
+    path(r'api/users/<int:pk>/delete/', views.UsersINFO.as_view()),
 
-    # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
-    # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление
-    path(r'api/mars_station/', views.GET_MarsStationList),
-    path(r'api/mars_station/<int:pk>/', views.GET_MarsStation),
-    # path(r'api/mars_station/create/', views.POST_MarsStation),
-    path(r'api/mars_station/<int:pk>/update/', views.PUT_MarsStation),
-    path(r'api/mars_station/<int:pk>/update_by_user/', views.PUT_MarsStation_BY_USER),
-    path(r'api/mars_station/<int:pk>/update_by_admin/', views.PUT_MarsStation_BY_ADMIN),
-    path(r'api/mars_station/<int:pk>/delete/', views.DELETE_MarsStation),
-
-    # М-М (МЕСТОПОЛОЖЕНИЕ)
-    # м-м - удаление из заявки, изменение количества/значения в м-м
-    path(r'api/location/<int:pk>/delete/', views.DELETE_Location),
-    path(r'api/location/<int:pk>/update/', views.PUT_Location),
-
-    # Транспорт
-    path(r'api/transport/', views.GET_Transport),
+    # Регистрация
+    path('api/register/', views.RegisterView.as_view()),
+    # Аутентификация и получение токена
+    path('api/authentication/', views.LoginView.as_view()),
+    # Авторизация
+    path('api/authorization/', views.UserView.as_view()),
+    # Выход с учетной записи
+    path('api/logout/', views.LogoutView.as_view()),
 ]

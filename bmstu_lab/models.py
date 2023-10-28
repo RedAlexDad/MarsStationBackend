@@ -1,15 +1,19 @@
-# import psycopg2
 from django.db import models
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 
 # Пользователь
-class Users(models.Model):
-    id = models.BigAutoField(primary_key=True, serialize=False)
-    login = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
-    admin = models.BooleanField()
-    class Meta:
-        managed = False
-        db_table = 'users'
+class Users(AbstractUser):
+    username = models.CharField(max_length=255, unique=True, verbose_name="Никнейм")
+    password = models.CharField(max_length=255, verbose_name="Пароль")
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
+
+    is_staff = models.BooleanField(default=False, verbose_name="Является ли пользователь менеджером?")
+    is_superuser = models.BooleanField(default=False, verbose_name="Является ли пользователь админом?")
+
+    def str(self):
+        return self.username
 
 # Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
 class Employee(models.Model):
