@@ -1,11 +1,11 @@
 # views.py - обработчик приложения
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
-from rest_framework import status
+from rest_framework import status, generics
 from django.shortcuts import get_object_or_404
 
 from bmstu_lab.serializers import GeographicalObjectSerializer, MarsStationSerializer, LocationSerializer, \
-    TransportSerializer, EmployeeSerializer, UsersSerializer, TypeTransportSerializer
+    TransportSerializer, EmployeeSerializer, UsersSerializer, TypeTransportSerializer, GeographicalObjectPhotoSerializer
 from bmstu_lab.models import GeographicalObject, MarsStation, Location, Transport, Employee, Users
 
 from bmstu_lab.DB_Minio import DB_Minio
@@ -18,6 +18,7 @@ import requests
 from rest_framework.pagination import PageNumberPagination
 # Время прогрузки и получение данных
 import threading
+import tempfile
 
 # ==================================================================================
 # УСЛУГА
@@ -29,7 +30,6 @@ class CustomPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     # Максимальное количество элементов на странице
     max_page_size = 10
-
 
 @api_view(['GET'])
 def GET_GeographicalObjects(request, pk=None, format=None):
@@ -54,12 +54,12 @@ def GET_GeographicalObjects(request, pk=None, format=None):
                     # Проверяет, существует ли такой объект в бакете
                     check_object = DB.stat_object(bucket_name='mars', object_name=obj.feature + '.jpg')
                     if bool(check_object):
-                        obj.url_photo = DB.get_presigned_url(
+                        obj.photo = DB.get_presigned_url(
                             method='GET', bucket_name='mars',
                             object_name=obj.feature + '.jpg'
                         )
                     else:
-                        obj.url_photo = None
+                        obj.photo = None
                     # Сохраняем обновленный объект в БД
                     obj.save()
             except Exception as ex:
@@ -107,14 +107,14 @@ def GET_GeographicalObject(request, pk=None, format=None):
                 # Проверяет, существует ли такой объект в бакете
                 check_object = DB.stat_object(bucket_name='mars', object_name=geographical_object.feature + '.jpg')
                 if bool(check_object):
-                    url_photo = DB.get_presigned_url(
+                    photo = DB.get_presigned_url(
                         method='GET', bucket_name='mars',
                         object_name=geographical_object.feature + '.jpg'
                     )
                 else:
-                    url_photo = None
+                    photo = None
 
-                geographical_object.url_photo = url_photo
+                geographical_object.photo = photo
                 geographical_object.save()
             except Exception as ex:
                 print(f"Ошибка при обработке объекта {geographical_object.feature}: {str(ex)}")
@@ -157,10 +157,6 @@ def process_image_from_url(feature, url_photo):
 
 @api_view(['POST'])
 def POST_GeograficObject(request, format=None):
-    jpeg_data = process_image_from_url(request.data.get('feature'), request.data.get('url_photo'))
-
-    if jpeg_data:
-        request.data['photo_byte'] = jpeg_data
     serializer = GeographicalObjectSerializer(data=request.data)
 
     if serializer.is_valid():
@@ -173,9 +169,51 @@ def POST_GeograficObject(request, format=None):
 def PUT_GeograficObject(request, pk, format=None):
     print('[INFO] API PUT [PUT_GeograficObject]')
     geographical_object = get_object_or_404(GeographicalObject, pk=pk)
-    jpeg_data = process_image_from_url(request.data.get('feature'), request.data.get('url_photo'))
-    if jpeg_data:
-        request.data['photo_byte'] = jpeg_data
+
+    photo = request.FILES.get('photo')
+    if photo:
+        DB = DB_Minio()
+        url_photo = None
+        check_object = False
+        def update_url_photo():
+            # Используем nonlocal для доступа к внешней переменной url_photo
+            nonlocal url_photo, check_object
+            try:
+                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                    temp_file.write(photo.read())
+                    # Сбросить указатель на файл
+                    temp_file.seek(0)
+                    # Загрузка файла в бакет
+                    DB.fput_object(bucket_name='mars', object_name=photo.name, file_path=temp_file.name)
+                    # Проверяет, существует ли такой объект в бакете
+                    check_object = DB.stat_object(bucket_name='mars', object_name=photo.name)
+                    # Get the presigned URL
+                    if bool(check_object):
+                        url_photo = DB.get_presigned_url(
+                            method='GET', bucket_name='mars',
+                            object_name=photo.name
+                        )
+            except Exception as ex:
+                print(f"Ошибка при обработке объекта {photo.name}: {str(ex)}")
+
+        # Создадим поток для выполнения операций Minio
+        thread = threading.Thread(target=update_url_photo)
+        thread.start()
+        # Подождем завершения потока с ожиданием в течение 3 секунд
+        thread.join(timeout=10)
+
+        if not thread.is_alive() and bool(check_object) is False:
+            return Response({'error': 'Timeout while waiting for URL update'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if url_photo:
+            serializer = GeographicalObjectPhotoSerializer(geographical_object, data={'id': pk, 'photo': url_photo})
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'Successfully uploaded and linked to the photo', 'data': serializer.data},
+                                status=status.HTTP_200_OK)
+
+        return Response({'error': 'No photo provided'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = GeographicalObjectSerializer(geographical_object, data=request.data)
     if serializer.is_valid():
@@ -494,34 +532,4 @@ def GET_Transport(request, format=None):
     # Сериализируем список транспортов
     transport_serializer = TypeTransportSerializer(transport, many=True)
 
-    return Response(transport_serializer.data)
-
-
-# Возвращает список транспортов марсианских станций
-@api_view(['GET'])
-def GET_TransportList(request, format=None):
-    print('[INFO] API GET [GET_TransportList]')
-    transport = Transport.objects.all()
-    # Сериализиуем его, чтобы получить в формате JSON
-    transport_serializer = TransportSerializer(transport, many=True)
-    return Response(transport_serializer.data)
-
-
-# Возвращает список транспортов марсианских станций СТАНЦИЯ
-@api_view(['GET'])
-def GET_TransportList_STATION(request, format=None):
-    print('[INFO] API GET [GET_TransportList]')
-    transport = Transport.objects.filter(type='Spacecraft')
-    # Сериализиуем его, чтобы получить в формате JSON
-    transport_serializer = TransportSerializer(transport, many=True)
-    return Response(transport_serializer.data)
-
-
-# Возвращает список транспортов марсианских станций РОВЕРЫ
-@api_view(['GET'])
-def GET_TransportList_ROVER(request, format=None):
-    print('[INFO] API GET [GET_TransportList]')
-    transport = Transport.objects.filter(type='Rover')
-    # Сериализиуем его, чтобы получить в формате JSON
-    transport_serializer = TransportSerializer(transport, many=True)
     return Response(transport_serializer.data)

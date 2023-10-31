@@ -35,11 +35,7 @@ class GeographicalObject(models.Model):
     type = models.CharField(max_length=255)
     size = models.IntegerField(null=True, blank=True)
     describe = models.CharField(max_length=1000, null=True, blank=True)
-    url_photo = models.CharField(max_length=1000, null=True, blank=True)
-    # blank=True позволяет сохранять поле как пустое, если оно не было заполнено.
-    # null=True позволяет полю принимать значение None (null), что полезно, если вы хотите, чтобы поле могло иметь отсутствующее значение.
-    # editable=True позволяет редактировать это поле через административный интерфейс Django или другие методы редактирования, если это необходимо.
-    photo_byte = models.BinaryField(blank=True, null=True, editable=True)
+    photo = models.CharField(max_length=1000, null=True, blank=True)
     status = models.BooleanField()
     class Meta:
         managed = False
@@ -51,11 +47,7 @@ class Transport(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     describe = models.CharField(max_length=1000, null=True, blank=True)
-    url_photo = models.CharField(max_length=1000, null=True, blank=True)
-    # blank=True позволяет сохранять поле как пустое, если оно не было заполнено.
-    # null=True позволяет полю принимать значение None (null), что полезно, если вы хотите, чтобы поле могло иметь отсутствующее значение.
-    # editable=True позволяет редактировать это поле через административный интерфейс Django или другие методы редактирования, если это необходимо.
-    photo_byte = models.BinaryField(blank=True, null=True, editable=True)
+    photo = models.CharField(max_length=1000, null=True, blank=True)
     class Meta:
         managed = False
         db_table = 'transport'

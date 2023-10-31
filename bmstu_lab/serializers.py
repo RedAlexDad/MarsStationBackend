@@ -8,6 +8,14 @@ class GeographicalObjectSerializer(serializers.ModelSerializer):
         # Либо весь поля записываем
         fields = '__all__'
 
+
+class GeographicalObjectPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        # Модель, которую мы сериализуем
+        model = GeographicalObject
+        # Либо весь поля записываем
+        fields = ('id', 'photo')
+
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
