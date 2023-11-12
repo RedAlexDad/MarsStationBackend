@@ -35,7 +35,8 @@ urlpatterns = [
     path(r'api/geographical_object/create/', views.POST_GeograficObject),
     path(r'api/geographical_object/<int:pk>/update/', views.PUT_GeograficObject),
     path(r'api/geographical_object/<int:pk>/delete/', views.DELETE_GeograficObject),
-    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/', views.POST_GeograficObject_IN_MarsStation),
+    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/',
+         views.POST_GeograficObject_IN_MarsStation),
 
     # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
     # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление

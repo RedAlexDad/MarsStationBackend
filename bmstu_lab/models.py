@@ -1,15 +1,18 @@
 # import psycopg2
 from django.db import models
 
+
 # Пользователь
 class Users(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False)
     login = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     admin = models.BooleanField()
+
     class Meta:
         managed = False
         db_table = 'users'
+
 
 # Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
 class Employee(models.Model):
@@ -24,9 +27,11 @@ class Employee(models.Model):
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_user',  # Имя поля в базе данных
     )
+
     class Meta:
         managed = False
         db_table = 'employee'
+
 
 # Географический объект (услуга)
 class GeographicalObject(models.Model):
@@ -37,9 +42,11 @@ class GeographicalObject(models.Model):
     describe = models.CharField(max_length=1000, null=True, blank=True)
     photo = models.CharField(max_length=1000, null=True, blank=True)
     status = models.BooleanField()
+
     class Meta:
         managed = False
         db_table = 'geographical_object'
+
 
 # Транспорт (доп. информация для услуги)
 class Transport(models.Model):
@@ -48,9 +55,11 @@ class Transport(models.Model):
     type = models.CharField(max_length=255)
     describe = models.CharField(max_length=1000, null=True, blank=True)
     photo = models.CharField(max_length=1000, null=True, blank=True)
+
     class Meta:
         managed = False
         db_table = 'transport'
+
 
 # Марсианская станция (заявка)
 class MarsStation(models.Model):
@@ -79,6 +88,7 @@ class MarsStation(models.Model):
     )
     status_task = models.IntegerField()
     status_mission = models.IntegerField()
+
     class Meta:
         managed = False
         db_table = 'mars_station'
@@ -100,6 +110,7 @@ class Location(models.Model):
         db_column='id_mars_station',  # Имя поля в базе данных
         related_name='id_mars_station_location',  # Пользовательское имя
     )
+
     class Meta:
         managed = False
         db_table = 'location'

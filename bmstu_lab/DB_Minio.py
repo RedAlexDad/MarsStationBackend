@@ -5,6 +5,7 @@ from minio import Minio
 import subprocess
 import io
 
+
 # Launch the MinIO Server
 # minio server ~/minio --console-address :9090
 # https://min.io/docs/minio/linux/index.html

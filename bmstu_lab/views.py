@@ -20,6 +20,7 @@ from rest_framework.pagination import PageNumberPagination
 import threading
 import tempfile
 
+
 # ==================================================================================
 # УСЛУГА
 # ==================================================================================
@@ -30,6 +31,7 @@ class CustomPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     # Максимальное количество элементов на странице
     max_page_size = 10
+
 
 @api_view(['GET'])
 def GET_GeographicalObjects(request, pk=None, format=None):
@@ -93,7 +95,25 @@ def GET_GeographicalObjects(request, pk=None, format=None):
     result_page = paginator.paginate_queryset(geographical_object, request)
     geographical_object_serializer = GeographicalObjectSerializer(result_page, many=True)
 
-    return paginator.get_paginated_response(geographical_object_serializer.data)
+    # Получение ID черновика
+    id_draft_service = None
+    try:
+        mars_station = MarsStation.objects.filter(status_task=1, status_mission=3).first()
+        if mars_station:
+            id_draft_service = mars_station.id
+    except MarsStation.DoesNotExist:
+        id_draft_service = {"error": "MarsStation not found"}
+
+    # Создадим словарь с желаемым форматом ответа
+    response_data = {
+        "count": paginator.page.paginator.count,
+        "next": paginator.get_next_link(),
+        "previous": paginator.get_previous_link(),
+        "id_draft_service": id_draft_service,
+        "results": {"service": geographical_object_serializer.data}
+    }
+
+    return Response(response_data)
 
 
 @api_view(['GET'])
@@ -101,6 +121,7 @@ def GET_GeographicalObject(request, pk=None, format=None):
     print('[INFO] API GET [GET_GeographicalObject]')
     if request.method == 'GET':
         geographical_object = get_object_or_404(GeographicalObject, pk=pk)
+
         def update_url_photo():
             try:
                 DB = DB_Minio()
@@ -129,10 +150,11 @@ def GET_GeographicalObject(request, pk=None, format=None):
         geographical_object_serializer = GeographicalObjectSerializer(geographical_object)
         return Response(geographical_object_serializer.data)
 
+
 def process_image_from_url(feature, url_photo):
     if url_photo:
         DB = DB_Minio()
-        DB.put_object_url(bucket_name='mars', object_name=feature+'.jpg', url=url_photo)
+        DB.put_object_url(bucket_name='mars', object_name=feature + '.jpg', url=url_photo)
         # Загрузите данные по URL
         response = requests.get(url_photo)
         if response.status_code == 200:
@@ -155,6 +177,7 @@ def process_image_from_url(feature, url_photo):
         # Если нет URL изображения, возвращаем None
         return None
 
+
 @api_view(['POST'])
 def POST_GeograficObject(request, format=None):
     serializer = GeographicalObjectSerializer(data=request.data)
@@ -163,6 +186,7 @@ def POST_GeograficObject(request, format=None):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Обновляет информацию о географическом объекте по ID
 @api_view(['PUT'])
@@ -175,6 +199,7 @@ def PUT_GeograficObject(request, pk, format=None):
         DB = DB_Minio()
         url_photo = None
         check_object = False
+
         def update_url_photo():
             # Используем nonlocal для доступа к внешней переменной url_photo
             nonlocal url_photo, check_object
@@ -513,6 +538,7 @@ def DELETE_Location(request, pk, format=None):
     location.delete()
 
     return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+
 
 # ==================================================================================
 # ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О ТРАНСПОРТАХ
