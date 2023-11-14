@@ -51,11 +51,11 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # Список аккаунтов
-    path(r'api/users/', views.UsersINFO.as_view()),
+    path(r'api/users/', views.UsersGET.as_view()),
     # Обновление аккаунта
-    path(r'api/users/<int:pk>/update/', views.UsersINFO.as_view()),
+    path(r'api/users/<int:pk>/update/', views.UsersPUT.as_view()),
     # Удаление аккаунта
-    path(r'api/users/<int:pk>/delete/', views.UsersINFO.as_view()),
+    path(r'api/users/<int:pk>/delete/', views.UsersDELETE.as_view()),
 
     # Регистрация
     path('api/register/', views.RegisterView.as_view()),

@@ -49,13 +49,13 @@ class GeograficalObjectAndTransports(serializers.ModelSerializer):
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = '__all__'
+        fields = ['id', 'username', 'password', 'is_staff', 'is_superuser']
 
 # Для аутенфикации, авторизации и регистрации
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'username', 'password', 'is_superuser']
+        fields = ['id', 'username', 'password', 'is_staff', 'is_superuser']
         extra_kwargs = {
             'password': {'write_only': True}
         }

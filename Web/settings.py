@@ -122,6 +122,18 @@ STATICFILES_DIRS = [
 
 # Авторизация и аутентификация
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
+}
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Password validation
@@ -164,6 +176,7 @@ JWT = {
     "SIGNING_KEY": "MY_SIGNING_KEY_123",
 }
 
+# sudo service redis-server start
 # Для БД аккаунта
 REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'
@@ -177,3 +190,4 @@ CACHES = {
         },
     }
 }
+
