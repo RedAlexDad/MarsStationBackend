@@ -41,6 +41,7 @@ schema_view = get_schema_view(
 # Можно остановить или перезагрузить командой
 # redis-server stop/restart
 
+# Панель администратора
 urlpatterns = [
     # Панель админа
     path('admin/', admin.site.urls),
@@ -49,7 +50,10 @@ urlpatterns = [
     # Включим URL-пути для вашего API через include
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+]
 
+# Авторизация, аутентификация, регистрация, выход с учетной записи
+urlpatterns += [
     # Список аккаунтов
     path(r'api/users/', views.UsersGET.as_view()),
     # Обновление аккаунта
@@ -65,4 +69,10 @@ urlpatterns = [
     path('api/authorization/', views.UserView.as_view()),
     # Выход с учетной записи
     path('api/logout/', views.LogoutView.as_view()),
+]
+
+# Другие функции
+urlpatterns += [
+    # Список аккаунтов
+    path(r'api/employee/', views.EmployeeGET.as_view()),
 ]

@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.renderers import JSONRenderer
+
+from drf_yasg.utils import swagger_auto_schema
 
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -9,8 +10,9 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated, BasePermission, IsAdminUser
 from django.conf import settings
 
-from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer
-from bmstu_lab.models import Users
+from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer, \
+    EmployeeSerializer
+from bmstu_lab.models import Users, Employee
 import jwt, datetime
 from cryptography.fernet import Fernet
 
@@ -48,6 +50,7 @@ class UsersPUT(APIView):
     model_class = Users
     serializer_class = UsersSerializer
 
+    @swagger_auto_schema(request_body=serializer_class)
     def put(self, request, pk, format=None):
         print('[INFO] API PUT [UsersINFO]')
         users = get_object_or_404(self.model_class, pk=pk)
@@ -77,6 +80,7 @@ class RegisterView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(request_body=UserRegisterSerializer)
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -88,6 +92,7 @@ class LoginView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(request_body=UserAuthorizationSerializer)
     def post(self, request):
         username = request.data['username']
         password = request.data['password']
@@ -158,8 +163,34 @@ class LogoutView(APIView):
         if 'jwt' not in request.COOKIES:
             raise ValidationError({'error': 'No JWT token found. You are already logged out'})
 
+        # Получение токена из куки
+        jwt_token = request.COOKIES['jwt']
+
+        # Добавление токена в черный список в Redis
+        blacklist_key = 'jwt_blacklist'
+        session_storage.set(blacklist_key, jwt_token)
+
+        # Удаление куки с токеном
         response.delete_cookie('jwt')
+
         response.data = {
             'message': 'Successfully'
         }
         return response
+
+
+# ==================================================================================
+# ДРУГИЕ ФУНКЦИИ
+# ==================================================================================
+
+class EmployeeGET(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    model_class = Employee
+    serializer_class = EmployeeSerializer
+
+    def get(self, request, format=None):
+        print('[INFO] API GET [UsersINFO]')
+        employees = self.model_class.objects.all()
+        serializer = self.serializer_class(employees, many=True)
+        return Response(serializer.data)
