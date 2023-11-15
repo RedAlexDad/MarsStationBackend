@@ -10,11 +10,9 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated, BasePermission, IsAdminUser
 from django.conf import settings
 
-from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer, \
-    EmployeeSerializer
-from bmstu_lab.models import Users, Employee
+from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer
+from bmstu_lab.models import Users
 import jwt, datetime
-from cryptography.fernet import Fernet
 
 # ==================================================================================
 # СУБД хранение сессий
@@ -179,18 +177,4 @@ class LogoutView(APIView):
         return response
 
 
-# ==================================================================================
-# ДРУГИЕ ФУНКЦИИ
-# ==================================================================================
 
-class EmployeeGET(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
-    model_class = Employee
-    serializer_class = EmployeeSerializer
-
-    def get(self, request, format=None):
-        print('[INFO] API GET [UsersINFO]')
-        employees = self.model_class.objects.all()
-        serializer = self.serializer_class(employees, many=True)
-        return Response(serializer.data)

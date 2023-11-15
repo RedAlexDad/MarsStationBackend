@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from bmstu_lab import views
+from bmstu_lab import views, other_func
 from rest_framework import routers, permissions
 # SWAGGER
 from drf_yasg.views import get_schema_view
@@ -74,5 +74,32 @@ urlpatterns += [
 # Другие функции
 urlpatterns += [
     # Список аккаунтов
-    path(r'api/employee/', views.EmployeeGET.as_view()),
+    path(r'api/employee/', other_func.EmployeeGET.as_view()),
+
+    # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
+    # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку
+    path(r'api/geographical_object/', other_func.GET_GeographicalObjects),
+    path(r'api/geographical_object/<int:pk>/', other_func.GET_GeographicalObject),
+    path(r'api/geographical_object/create/', other_func.POST_GeograficObject),
+    path(r'api/geographical_object/<int:pk>/update/', other_func.PUT_GeograficObject),
+    path(r'api/geographical_object/<int:pk>/delete/', other_func.DELETE_GeograficObject),
+    path(r'api/geographical_object/<int:pk_service>/create_service_in_task/',
+         other_func.POST_GeograficObject_IN_MarsStation),
+
+    # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
+    # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление
+    path(r'api/mars_station/', other_func.GET_MarsStationList),
+    path(r'api/mars_station/<int:pk>/', other_func.GET_MarsStation),
+    path(r'api/mars_station/<int:pk>/update/', other_func.PUT_MarsStation),
+    path(r'api/mars_station/<int:pk>/update_by_user/', other_func.PUT_MarsStation_BY_USER),
+    path(r'api/mars_station/<int:pk>/update_by_admin/', other_func.PUT_MarsStation_BY_ADMIN),
+    path(r'api/mars_station/<int:pk>/delete/', other_func.DELETE_MarsStation),
+
+    # М-М (МЕСТОПОЛОЖЕНИЕ)
+    # м-м - удаление из заявки, изменение количества/значения в м-м
+    path(r'api/location/<int:pk>/delete/', other_func.DELETE_Location),
+    path(r'api/location/<int:pk>/update/', other_func.PUT_Location),
+
+    # Транспорт
+    path(r'api/transport/', other_func.GET_Transport),
 ]
