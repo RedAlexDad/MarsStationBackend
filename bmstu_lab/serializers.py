@@ -31,8 +31,6 @@ class TransportSerializer(serializers.ModelSerializer):
     class Meta:
         # Модель, которую мы сериализуем
         model = Transport
-        # Поля, которые мы сериализуем
-        # fields = ['id', 'name', 'type', 'describe', 'url_photo']
         # Либо весь поля записываем
         fields = '__all__'
 
@@ -46,7 +44,6 @@ class TypeTransportSerializer(serializers.ModelSerializer):
 class MarsStationSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarsStation
-        # fields = ['id', 'type_status', 'data_create', 'data_from', 'data_close', 'id_scientist', 'id_transport', 'id_status']
         # Либо весь поля записываем
         fields = '__all__'
 
@@ -89,6 +86,18 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def update(self, instance, validated_data):
+        password = validated_data.get('password', None)
+        if password is not None:
+            instance.set_password(password)
+        else:
+            # Если пароль не предоставлен в запросе, сохраняем текущий пароль
+            validated_data['password'] = instance.password
+
+        instance.is_staff = validated_data.get('is_staff', instance.is_staff)
+        instance.is_superuser = validated_data.get('is_superuser', instance.is_superuser)
+        instance.save()
+        return instance
 
 class UserAuthorizationSerializer(serializers.Serializer):
     username = serializers.EmailField(required=True)

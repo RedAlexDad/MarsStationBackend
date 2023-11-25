@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 
-
 # Пользователь
 class Users(AbstractUser):
+    id = models.BigAutoField(primary_key=True, serialize=False, verbose_name="ID")
     username = models.CharField(max_length=255, unique=True, verbose_name="Никнейм")
     password = models.CharField(max_length=255, verbose_name="Пароль")
 
@@ -16,6 +16,9 @@ class Users(AbstractUser):
     def str(self):
         return self.username
 
+    class Meta:
+        db_table = 'users'
+
 
 # Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
 class Employee(models.Model):
@@ -23,12 +26,12 @@ class Employee(models.Model):
     full_name = models.CharField(max_length=255, verbose_name="ФИО")
     post = models.CharField(max_length=255, verbose_name="Должность")
     name_organization = models.CharField(max_length=255, verbose_name="Название организации")
-    address = models.CharField(max_length=255, verbose_name="Адрес")
+    address = models.CharField(max_length=255, null=True, blank=True, verbose_name="Адрес")
     # Добавляем внешний ключ к другой модели
     id_user = models.ForeignKey(
         Users,
-        on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
-        db_column='id_user',  # Имя поля в базе данных
+        on_delete=models.CASCADE,
+        db_column='id_user',
         verbose_name="ID пользователя"
     )
 
@@ -70,8 +73,8 @@ class MarsStation(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False, verbose_name="ID")
     type_status = models.CharField(max_length=255, verbose_name="Тип заявки")
     date_create = models.DateField(verbose_name="Дата создания")
-    date_form = models.DateField(verbose_name="Дата формирования")
-    date_close = models.DateField(verbose_name="Дата закрытия")
+    date_form = models.DateField(null=True, blank=True, verbose_name="Дата формирования")
+    date_close = models.DateField(null=True, blank=True, verbose_name="Дата закрытия")
     # Добавляем внешний ключ к другой модели
     id_employee = models.ForeignKey(
         Employee,
@@ -85,13 +88,15 @@ class MarsStation(models.Model):
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_moderator',  # Имя поля в базе данных
         related_name='id_moderator_by_table_employee',
-        verbose_name="ID модератора"
+        verbose_name="ID модератора",
+        null=True, blank=True
     )
     id_transport = models.ForeignKey(
         Transport,
         on_delete=models.CASCADE,  # Это действие, которое будет выполнено при удалении связанной записи
         db_column='id_transport',  # Имя поля в базе данных
-        verbose_name="ID транспорта"
+        verbose_name="ID транспорта",
+        null=True, blank=True
     )
     status_task = models.IntegerField(verbose_name="Статус заявки")
     status_mission = models.IntegerField(verbose_name="Статус миссии")

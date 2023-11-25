@@ -74,7 +74,7 @@ urlpatterns += [
 # Другие функции
 urlpatterns += [
     # Список аккаунтов
-    path(r'api/employee/', other_func.EmployeeGET.as_view()),
+    path(r'api/employee/', views.EmployeeClass.as_view()),
 
     # УСЛУГА (ГЕОГРАФИЧЕСКИЙ ОБЪЕКТ)
     # Услуги - список, одна запись, добавление, изменение, удаление, добавление в заявку

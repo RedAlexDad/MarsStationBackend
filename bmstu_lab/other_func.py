@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from rest_framework import status, generics
 from drf_yasg.utils import swagger_auto_schema
 
@@ -14,7 +15,8 @@ from bmstu_lab.models import GeographicalObject, MarsStation, Location, Transpor
 from bmstu_lab.DB_Minio import DB_Minio
 
 # Дата
-from datetime import datetime
+# from datetime import datetime
+from datetime import date
 # Время прогрузки, получение данных, запросов
 import threading, tempfile, requests
 # Изображение
@@ -23,6 +25,7 @@ import io
 
 # Возвращает список географические объекты
 from rest_framework.pagination import PageNumberPagination
+
 
 # ==================================================================================
 # УСЛУГА
@@ -103,7 +106,7 @@ def GET_GeographicalObjects(request, pk=None, format=None):
     # Получение ID черновика
     id_draft_service = None
     try:
-        mars_station = MarsStation.objects.filter(status_task=1, status_mission=3).first()
+        mars_station = MarsStation.objects.filter(status_task=1, status_mission=3).last()
         if mars_station:
             id_draft_service = mars_station.id
     except MarsStation.DoesNotExist:
@@ -191,7 +194,6 @@ def process_image_from_url(feature, url_photo):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def POST_GeograficObject(request, format=None):
     serializer = GeographicalObjectSerializer(data=request.data)
-
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -271,7 +273,7 @@ def DELETE_GeograficObject(request, pk, format=None):
     print('[INFO] API DELETE [DELETE_GeograficObjects]')
     geographical_object = get_object_or_404(GeographicalObject, pk=pk)
     geographical_object.delete()
-    return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+    return Response(data={"message": 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # Добавляет новую запись в заявку
@@ -288,38 +290,128 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
         return Response(f"ERROR! Object GeographicalObject there is no such object by ID!",
                         status=status.HTTP_404_NOT_FOUND)
 
+    # Получаем пользователя
+    user = request.user
+    employee = get_object_or_404(Employee, pk=user.id) if not user.is_staff else None
+
     # Находим заявку с таким статусом
-    mars_station = MarsStation.objects.filter(status_task=1, status_mission=3).last()
+    mars_station = MarsStation.objects.filter(
+        status_task=1,
+        status_mission=3,
+        id_employee=employee
+    ).last()
+
     # Если такой заявки нет, то создаем
     if mars_station == None:
-        # status_task [1: Введен; 2: В работе; 3: Завершена; 4: Отменена; 5: Удалена]
+        # status_task [1: Черновик; 2: В работе; 3: Завершена; 4: Отменена; 5: Удалена]
         # status_mission [1: Успех; 2: Потеря; 3: Работает]
+
         mars_station = MarsStation.objects.create(
-            date_create=datetime.now(),
+            date_create=date.today(),
             status_task=1,
             status_mission=3,
+            id_employee=employee
         )
-        print('Create new statement')
+
+        print({"message": 'Create new statement'})
 
     # Создание записи в таблице Location для связи между MarsStation и GeographicalObject
     Location.objects.create(
         id_geographical_object=geographical_object,
         id_mars_station=mars_station,
     )
-    return Response(f'Successfully created, ID: {mars_station.id}', status=status.HTTP_201_CREATED)
+    return Response(data={"message": f'Successfully created, ID: {mars_station.id}'}, status=status.HTTP_201_CREATED)
 
 
 # ==================================================================================
 # ЗАЯВКА
 # ==================================================================================
 
+def info_request_mars_station(request, pk_mars_station, format=None):
+    try:
+        mars_station = get_object_or_404(MarsStation, pk=pk_mars_station)
+    except Http404 as error:
+        return Response({"message": "MarsStation not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as error:
+        return Response({"message": "An error occurred", "error": str(error)},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        transport = get_object_or_404(Transport, id=mars_station.id_transport_id)
+    except Http404 as error:
+        transport = None
+    #     return Response({"message": "Transport not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+    # except Exception as error:
+    #     return Response({"message": "An error occurred", "error": str(error)},
+    #                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        employee = get_object_or_404(Employee, id=mars_station.id_employee_id)
+        try:
+            user = get_object_or_404(Users, id=employee.id_user_id)
+        except Http404 as error:
+            return Response({"message": "Users not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as error:
+            return Response({"message": "An error occurred", "error": str(error)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Http404 as error:
+        return Response({"message": "Employee not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as error:
+        return Response({"message": "An error occurred", "error": str(error)},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        moderator = get_object_or_404(Employee, id=mars_station.id_moderator_id)
+    except Http404 as error:
+        moderator = None
+    #     return Response({"message": "Moderator not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+    # except Exception as error:
+    #     return Response({"message": "An error occurred", "error": str(error)},
+    #                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    locations = Location.objects.filter(id_mars_station=mars_station.id)
+    geographical_object_serializer = []
+
+    for location in locations:
+        try:
+            geographical_object = get_object_or_404(GeographicalObject, id=location.id_geographical_object.id)
+            geographical_object_serializer.append(GeographicalObjectSerializer(geographical_object).data)
+        except Http404 as error:
+            return Response({"message": "GeographicalObject not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as error:
+            return Response({"message": "An error occurred", "error": str(error)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    response = {
+        "id": pk_mars_station,
+        "type_status": mars_station.type_status,
+        "date_create": mars_station.date_create,
+        "date_form": mars_station.date_form,
+        "date_close": mars_station.date_close,
+        "status_task": mars_station.status_task,
+        "status_mission": mars_station.status_mission,
+        "employee": EmployeeSerializer(employee).data,
+        "moderator": EmployeeSerializer(moderator).data,
+        "transport": TransportSerializer(transport).data,
+        "geographical_object": geographical_object_serializer
+    }
+
+    return Response(response)
+
+
 # Возвращает список марсианских станций
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def GET_MarsStationList(request, format=None):
     print('[INFO] API GET [GET_MarsStation]')
-    mars_station = MarsStation.objects.all()
+
+    employee = get_object_or_404(Employee, pk=request.user.id) if not request.user.is_staff else None
+
+    # Если это не модератор, то выводит конкретные его заявки
+    if employee:
+        mars_station = MarsStation.objects.filter(id_employee=employee.id)
+    # Для модератора доступны все заявки
+    else:
+        mars_station = MarsStation.objects.all()
 
     # Получим параметры запроса из URL
     type_status = request.GET.get('type_status')
@@ -337,6 +429,14 @@ def GET_MarsStationList(request, format=None):
            [type_status, status_task, status_mission, date_create, date_close, date_form_after, date_form_before]):
         # Сериализиуем его, чтобы получить в формате JSON
         mars_station_serializer = MarsStationSerializer(mars_station, many=True)
+
+        # Вызываем функцию get_mars_station_info для каждой станции
+        result_data = []
+        for station in mars_station:
+            station_info = info_request_mars_station(request, station.id)
+            result_data.append(station_info.data)
+
+        return Response(result_data)
     else:
         # Применим фильтры на основе параметров запроса, если они предоставлены
         if type_status:
@@ -364,61 +464,27 @@ def GET_MarsStationList(request, format=None):
             mars_station = mars_station.filter(date_form__gte=date_form_after)
             mars_station = mars_station.filter(date_form__lte=date_form_before)
 
-        # Сериализуем результаты запроса
-        mars_station_serializer = MarsStationSerializer(mars_station, many=True)
+        # Вызываем функцию get_mars_station_info для каждой станции
+        result_data = []
+        for station in mars_station:
+            station_info = info_request_mars_station(station.id)
+            result_data.append(station_info.data)
 
-    return Response(mars_station_serializer.data)
+        return Response(result_data)
 
 
 # Возвращает данные о марсианской станции
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def GET_MarsStation(request, pk=None, format=None):
     print('[INFO] API GET [GET_MarsStation]')
     if request.method == 'GET':
         try:
-            mars_station = get_object_or_404(MarsStation, pk=pk)
-        except MarsStation.DoesNotExist:
-            return Response({"error": "MarsStation not found"}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            transport = get_object_or_404(Transport, id=mars_station.id_transport.id)
-        except Transport.DoesNotExist:
-            transport = None  # Транспорт не найден, устанавливаем moderator в None
+            return info_request_mars_station(request, pk_mars_station=pk)
+        except Exception as error:
+            return Response({"message": error}, status=status.HTTP_404_NOT_FOUND)
 
-        try:
-            employee = get_object_or_404(Employee, id=mars_station.id_employee.id)
-            try:
-                user = get_object_or_404(Users, id=employee.id_user.id)
-            except Users.DoesNotExist:
-                user = None
-        except Employee.DoesNotExist:
-            employee = None  # Сотрудник не найден, устанавливаем employee в None
-
-        try:
-            moderator = get_object_or_404(Employee, id=mars_station.id_moderator.id)
-        except Employee.DoesNotExist:
-            moderator = None  # Модератор не найден, устанавливаем moderator в None
-
-        locations = Location.objects.filter(id_mars_station=mars_station.id)
-        geographical_object_serializer = []
-
-        for location in locations:
-            try:
-                geographical_object = get_object_or_404(GeographicalObject, id=location.id_geographical_object.id)
-                geographical_object_serializer.append(GeographicalObjectSerializer(geographical_object).data)
-            except GeographicalObject.DoesNotExist:
-                geographical_object_serializer.append({"error": "Geographical Object not found"})
-
-        response = {
-            "employee": EmployeeSerializer(employee).data,
-            "moderator": EmployeeSerializer(moderator).data,
-            "mars_station": MarsStationSerializer(mars_station).data,
-            "transport": TransportSerializer(transport).data,
-            "geographical_object": geographical_object_serializer
-        }
-
-        return Response(response)
 
 # Обновляет информацию о марсианской станции по ID
 @swagger_auto_schema(method='put', request_body=MarsStationSerializer)
@@ -428,6 +494,8 @@ def GET_MarsStation(request, pk=None, format=None):
 def PUT_MarsStation(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation]')
     mars_station = get_object_or_404(MarsStation, pk=pk)
+    # Обновление текущего дата
+    request.data['date_form'] = date.today()
     mars_station_serializer = MarsStationSerializer(mars_station, data=request.data)
     if mars_station_serializer.is_valid():
         mars_station_serializer.save()
@@ -442,26 +510,17 @@ def PUT_MarsStation(request, pk, format=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation_BY_USER(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation_BY_USER]')
-    if request.data['status_task'] in [4, 5]:
+    if request.data['status_task'] in [2, 4, 5]:
         try:
             mars_station = MarsStation.objects.get(pk=pk)
         except MarsStation.DoesNotExist:
-            return Response("MarsStation not found", status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "MarsStation not found"}, status=status.HTTP_404_NOT_FOUND)
 
         mars_station.status_task = request.data['status_task']
-
-        if 'id_employee' in request.data:
-            new_id_employee = request.data['id_employee']
-            try:
-                new_employee = Employee.objects.get(pk=new_id_employee)
-                mars_station.id_employee = new_employee
-                mars_station.save()
-                return Response("Successfully updated status")
-            except Employee.DoesNotExist:
-                return Response("New moderator not found", status=status.HTTP_404_NOT_FOUND)
-        # return Response(mars_station_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        mars_station.save()
+        return Response({"message": "Successfully updated status"})
     else:
-        return Response('You are not moderator! Check status in [4, 5]')
+        return Response({"message": 'You are not moderator! Check status in [2, 4, 5]'})
 
 
 # Обновляет информацию о марсианской станции по ID модератора
@@ -471,29 +530,33 @@ def PUT_MarsStation_BY_USER(request, pk, format=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation_BY_ADMIN(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation_BY_ADMIN]')
-    if request.data['status_task'] in [2, 3, 4, 5]:
-        try:
-            mars_station = MarsStation.objects.get(pk=pk)
-        except MarsStation.DoesNotExist:
-            return Response("MarsStation not found", status=status.HTTP_404_NOT_FOUND)
 
-        mars_station.date_form = datetime.today()
+    try:
+        mars_station = MarsStation.objects.get(pk=pk)
+    except MarsStation.DoesNotExist:
+        return Response({"message": "MarsStation not found!"}, status=status.HTTP_404_NOT_FOUND)
+    # Изначальный статус заявки должн быть "В работе"
+    if mars_station.status_task != 2:
+        return Response({"message": "Mistake! The application must have the status 'В работе'!"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.data['status_task'] in [3, 4]:
+        # Получаем пользователя
+        user = request.user
+        moderator = get_object_or_404(Employee, pk=user.id) if user.is_staff else None
+
+        mars_station.date_form = date.today()
         mars_station.status_task = request.data['status_task']
         mars_station.status_mission = request.data['status_mission']
-        if request.data['status_task'] in [3, 4, 5]:
-            mars_station.date_close = datetime.today()
+        mars_station.id_moderator_id = moderator.id
 
-        if 'id_moderator' in request.data:
-            new_moderator_id = request.data['id_moderator']
-            try:
-                new_moderator = Employee.objects.get(pk=new_moderator_id)
-                mars_station.id_moderator = new_moderator
-                mars_station.save()
-                return Response("Successfully updated status")
-            except Employee.DoesNotExist:
-                return Response("New moderator not found", status=status.HTTP_404_NOT_FOUND)
+        if request.data['status_task'] in [3, 4]:
+            mars_station.date_close = date.today()
+
+        mars_station.save()
+
+        return Response({"message": "Successfully updated status"})
     else:
-        return Response('You dont updated status "IN PROCESS"! Check status in [2, 3, 4, 5]')
+        return Response({"message": 'You dont updated status "IN PROCESS"! Check status in [3, 4]'})
 
 
 # Удаляет марсианскую станцию по ID
@@ -507,7 +570,8 @@ def DELETE_MarsStation(request, pk, format=None):
     print('[INFO] API DELETE [DELETE_MarsStation]')
     mars_station = get_object_or_404(MarsStation, pk=pk)
     mars_station.delete()
-    return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+    return Response({"message": 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
+
 
 # ==================================================================================
 # М-М
@@ -532,9 +596,9 @@ def PUT_Location(request, pk, format=None):
             location_serializer = LocationSerializer(location)
             return Response(location_serializer.data)
         except ValueError:
-            return Response('Invalid sequence number format', status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": 'Invalid sequence number format'}, status=status.HTTP_400_BAD_REQUEST)
     except:
-        return Response('Sequence number not provided in the request', status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": 'Sequence number not provided in the request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Удаляет марсианскую станцию по ID
@@ -550,7 +614,7 @@ def DELETE_Location(request, pk, format=None):
     # Затем удалим сам объект Location
     location.delete()
 
-    return Response('Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+    return Response({"message": 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ==================================================================================
@@ -574,21 +638,3 @@ def GET_Transport(request, format=None):
     transport_serializer = TypeTransportSerializer(transport, many=True)
 
     return Response(transport_serializer.data)
-
-# ==================================================================================
-# ДРУГИЕ ФУНКЦИИ
-# ==================================================================================
-
-class EmployeeGET(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
-    model_class = Employee
-    serializer_class = EmployeeSerializer
-
-    def get(self, request, format=None):
-        print('[INFO] API GET [UsersINFO]')
-        employees = self.model_class.objects.all()
-        serializer = self.serializer_class(employees, many=True)
-        return Response(serializer.data)
-
-
