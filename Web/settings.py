@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     # Для аутенфикации
     'rest_framework',
-    'corsheaders',
+    # Для проксирования
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Для проксирования
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = "Web.urls"
@@ -71,6 +74,41 @@ TEMPLATES = [
         },
     },
 ]
+
+# Проксирование
+CORS_ALLOWED_ORIGINS = [
+    # Frontend
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # Backend
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+
+CORS_ALLOWED_URLS = [
+    r"^/api/geographical_object/$",
+    r"^/api/geographical_object/\d+/$",
+    r"^/api/geographical_object/create/$",
+    r"^/api/geographical_object/\d+/update/$",
+    r"^/api/geographical_object/\d+/delete/$",
+    r"^/api/geographical_object/\d+/create_service_in_task/$",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 WSGI_APPLICATION = "Web.wsgi.application"
 
@@ -111,7 +149,7 @@ STATIC_URL = "/static/"
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-]  # (при этом можно папку с static поместить в ту же директорию, где лежит папка tеmplates и, соответственно, путь прописать аналогичным образом)
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
@@ -152,18 +190,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Для аутенфикации и авторизации
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    "Authorization",
-    "Content-Type",
-]
-
 JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),

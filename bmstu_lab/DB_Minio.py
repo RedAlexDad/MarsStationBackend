@@ -44,7 +44,7 @@ class DB_Minio():
             self.client = Minio(
                 # адрес сервера
                 # endpoint=endpoint+':9000',
-                endpoint="192.168.1.53:9000",
+                endpoint="127.0.0.1:9000",
                 # логин админа
                 access_key='minioadmin',
                 # пароль админа
