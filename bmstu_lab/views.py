@@ -4,47 +4,20 @@ from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
 
+from django.core.cache import cache
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated, BasePermission, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, BasePermission
 from django.conf import settings
+from bmstu_lab.permissions import IsModerator, IsAuthenticated, create_access_token, create_refresh_token, \
+    get_jwt_payload, get_access_token, get_refresh_token, add_in_blacklist
 
 from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer, \
     EmployeeSerializer
 from bmstu_lab.models import Users, Employee
 import jwt, datetime
-
-# ==================================================================================
-# СУБД хранение сессий
-# ==================================================================================
-import redis
-
-# Подключение Redis
-# sudo service redis-server start
-session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-# Просмотр конфигурации
-# redis-server
-# Просмотр статус
-# sudo service redis-server status
-# Остановка сервера Redis:
-# redis-cli shutdown
-# Если бесполезно, то
-# sudo service redis-server stop
-# Либо убить его
-# ps aux | grep redis
-# sudo kill <PID>
-
-# Удаление файла данных Redis:
-# По умолчанию файл данных Redis называется dump.rdb и находится в рабочем каталоге сервера. Удалите этот файл, чтобы удалить данные:
-# rm /path/to/your/redis/dump.rdb
-# Перезагрузка сервера
-# sudo service redis-server restart
-# https://redis.io/docs/connect/clients/python/
-
-# Просмотр созданных токенов
-# keys *
 
 # ==================================================================================
 # АККАУНТЫ
@@ -55,7 +28,7 @@ from django.shortcuts import get_object_or_404
 
 class UsersGET(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsModerator]
     model_class = Users
     serializer_class = UsersSerializer
 
@@ -68,7 +41,7 @@ class UsersGET(APIView):
 
 class UsersPUT(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsModerator]
     model_class = Users
     serializer_class = UserRegisterSerializer
 
@@ -85,7 +58,7 @@ class UsersPUT(APIView):
 
 class UsersDELETE(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsModerator]
     model_class = Users
 
     def delete(self, request, pk, format=None):
@@ -141,19 +114,19 @@ class EmployeeClass(APIView):
 
 
 # ==================================================================================
-# РЕГИСТРАЦИЯ, АУТЕНФИКАЦИЯ, АВТОРИЗАЦИЯ, ВЫХОД С УЧЕТНОЙ ЗАПИСИ
+# РЕГИСТРАЦИЯ, АУТЕНФИКАЦИЯ, ПОЛУЧЕНИЕ ТОКЕНА, ВЫХОД С УЧЕТНОЙ ЗАПИСИ
 # ==================================================================================
+# Регистрация
 class RegisterView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [AllowAny]
+    permission_classes = []
 
     @swagger_auto_schema(request_body=UserRegisterSerializer)
     def post(self, request):
         user_data = {
             "username": request.data['username'],
             "password": request.data['password'],
-            "is_superuser": request.data['is_superuser'],
-            "is_staff": request.data['is_staff']
+            "is_moderator": request.data.get('is_moderator', False),
         }
         try:
             user_serializer = UserRegisterSerializer(data=user_data)
@@ -180,43 +153,42 @@ class RegisterView(APIView):
             return Response(data={"error": str(error)}, status=status.HTTP_404_NOT_FOUND)
 
 
+# Аутентификация
 class LoginView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(request_body=UserAuthorizationSerializer)
     def post(self, request):
-        username = request.data['username']
-        password = request.data['password']
+        user_serializer = UserAuthorizationSerializer(data=request.data)
 
-        user = Users.objects.filter(username=username).first()
+        if not user_serializer.is_valid():
+            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        user = authenticate(**user_serializer.data)
         if user is None:
-            raise AuthenticationFailed('User not found!')
+            return Response({'message': 'User not found! Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-
-        payload = {
-            'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
-
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
-        try:
-            # Хранение токена в REDIS
-            session_storage.set(token, username)
-            error_message = {}
-        except Exception as error:
-            error_message = {'redis_status': False, 'error': str(error)}
-            print('Ошибка соединения с Redis. \nLOG:', error)
+        error_message, access_token = create_access_token(user)
+        employee = Employee.objects.get(id_user=user.id)
 
         response = Response(status=status.HTTP_200_OK)
-        response.set_cookie(key='jwt', value=token, httponly=True)
+        response.set_cookie(key='access_token', value=access_token, httponly=True)
         response.data = {
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'is_moderator': user.is_moderator
+            },
+            'employee': {
+                'id': employee.id,
+                'name': employee.full_name,
+                'post': employee.post,
+                'name_organization': employee.name_organization,
+                'address': employee.address
+            },
             'message': 'Successfully',
-            'jwt': token,
+            'access_token': access_token,
         }
 
         # Добавляем error_message, если есть ошибка
@@ -226,62 +198,67 @@ class LoginView(APIView):
         return response
 
 
-class UserView(APIView):
+# Получение токена
+class GetToken(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
     permission_classes = []
 
     def post(self, request):
-        # Получение токена из хранилища (Redis)
-        token = request.COOKIES.get('jwt')
+        error_message, access_token = get_access_token(request)
+        print('token:', access_token)
 
-        # token = request.headers.get('Authorization', None).replace('Bearer ', '')
-
-        if not token:
-            raise AuthenticationFailed('Unauthenticated!')
-
-        # Получение имени пользователя из Redis по токену
-        stored_username = session_storage.get(token)
-
-        if not stored_username:
-            raise AuthenticationFailed('Unauthenticated!')
-
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
-
+        payload = get_jwt_payload(access_token)
         user = Users.objects.filter(id=payload['id']).first()
-        serializer = UserAuthorizationSerializer(user)
-        return Response(serializer.data)
+        employee = Employee.objects.get(id_user=user.id)
+
+        data = {
+            'user_data': {
+                'id': user.id,
+                'username': user.username,
+                'is_moderator': user.is_moderator
+            },
+            'employee': {
+                'id': employee.id,
+                'name': employee.full_name,
+                'post': employee.post,
+                'name_organization': employee.name_organization,
+                'address': employee.address
+            },
+            'message': 'Successfully',
+            'access_token': access_token,
+        }
+        # Добавляем error_message, если есть ошибка
+        if error_message:
+            data['error_message'] = error_message
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class LogoutView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def post(self, request):
-        response = Response()
+        access_token = request.COOKIES.get('access_token')
 
         # Проверка наличия токена
-        if 'jwt' not in request.COOKIES:
-            raise ValidationError({'error': 'No JWT token found. You are already logged out'})
-
-        # Получение токена из куки
-        jwt_token = request.COOKIES['jwt']
+        if access_token is None:
+            return Response({'error': 'No access_token token found. Token is not found in cookie. You are already logged out'},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
         # Добавление токена в черный список в Redis
-        blacklist_key = 'jwt_blacklist'
-        session_storage.set(blacklist_key, jwt_token)
+        error_message, token_exists = add_in_blacklist(access_token)
+        response = Response(status=status.HTTP_200_OK)
 
         # Удаление куки с токеном
-        response.delete_cookie('jwt')
-
-        # Проверка токена в ЧС
-        token_exists = session_storage.exists(blacklist_key, jwt_token)
-
+        response.delete_cookie('access_token')
         response.data = {
             'message': 'Successfully',
             'is_token_in_blacklist': bool(token_exists)
         }
+
+        # Добавляем error_message, если есть ошибка
+        if error_message:
+            response.data['error_message'] = error_message
+
         return response

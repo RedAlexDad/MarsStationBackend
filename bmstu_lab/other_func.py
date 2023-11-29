@@ -4,10 +4,14 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from rest_framework import status, generics
 from drf_yasg.utils import swagger_auto_schema
+# Полномочия
+from bmstu_lab.views import IsModerator
 
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated, BasePermission, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, BasePermission
+from bmstu_lab.permissions import IsModerator, IsAuthenticated, create_access_token, create_refresh_token, \
+    get_jwt_payload, get_access_token, get_refresh_token, add_in_blacklist
 
 from bmstu_lab.serializers import GeographicalObjectSerializer, MarsStationSerializer, LocationSerializer, \
     TransportSerializer, EmployeeSerializer, UsersSerializer, TypeTransportSerializer, GeographicalObjectPhotoSerializer
@@ -190,7 +194,7 @@ def process_image_from_url(feature, url_photo):
 
 @swagger_auto_schema(method='post', request_body=GeographicalObjectSerializer)
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def POST_GeograficObject(request, format=None):
     serializer = GeographicalObjectSerializer(data=request.data)
@@ -203,7 +207,7 @@ def POST_GeograficObject(request, format=None):
 # Обновляет информацию о географическом объекте по ID
 @swagger_auto_schema(method='put', request_body=GeographicalObjectSerializer)
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_GeograficObject(request, pk, format=None):
     print('[INFO] API PUT [PUT_GeograficObject]')
@@ -264,7 +268,7 @@ def PUT_GeograficObject(request, pk, format=None):
 
 # Удаляет географический объект по ID
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def DELETE_GeograficObject(request, pk, format=None):
     if not GeographicalObject.objects.filter(pk=pk).exists():
@@ -386,8 +390,8 @@ def info_request_mars_station(request, pk_mars_station, format=None):
         "date_create": mars_station.date_create,
         "date_form": mars_station.date_form,
         "date_close": mars_station.date_close,
-        "status_task": mars_station.status_task,
-        "status_mission": mars_station.status_mission,
+        "status_task": mars_station.get_status_task_display_word(),
+        "status_mission": mars_station.get_status_mission_display_word(),
         "employee": EmployeeSerializer(employee).data,
         "moderator": EmployeeSerializer(moderator).data,
         "transport": TransportSerializer(transport).data,
@@ -403,11 +407,14 @@ def info_request_mars_station(request, pk_mars_station, format=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def GET_MarsStationList(request, format=None):
     print('[INFO] API GET [GET_MarsStation]')
+    error_message, token = get_access_token(request)
+    payload = get_jwt_payload(token)
+    id = payload['id']
 
-    employee = get_object_or_404(Employee, pk=request.user.id) if not request.user.is_staff else None
+    employee = get_object_or_404(Employee, pk=id) if not request.user.is_staff else None
 
     # Если это не модератор, то выводит конкретные его заявки
-    if employee:
+    if not employee.id_user.is_moderator:
         mars_station = MarsStation.objects.filter(id_employee=employee.id)
     # Для модератора доступны все заявки
     else:
@@ -489,7 +496,7 @@ def GET_MarsStation(request, pk=None, format=None):
 # Обновляет информацию о марсианской станции по ID
 @swagger_auto_schema(method='put', request_body=MarsStationSerializer)
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation]')
@@ -510,67 +517,73 @@ def PUT_MarsStation(request, pk, format=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation_BY_USER(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation_BY_USER]')
-    if request.data['status_task'] in [2, 4, 5]:
-        try:
-            mars_station = MarsStation.objects.get(pk=pk)
-        except MarsStation.DoesNotExist:
-            return Response({"message": "MarsStation not found"}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        mars_station = MarsStation.objects.get(pk=pk)
+    except MarsStation.DoesNotExist:
+        return Response({"error": 'MarsStation not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    if mars_station.status_task == request.data['status_task']:
+        return Response({'error': f'This application already has the status "{mars_station.get_status_task_display_word()}"'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    if mars_station.status_task in [3, 4, 5]:
+        return Response({'error': 'You cant edit it because the application process has already been completed'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.data['status_task'] in [2, 4, 5]:
         mars_station.status_task = request.data['status_task']
         mars_station.save()
-        return Response({"message": "Successfully updated status"})
+        return Response({'message': 'Successfully updated status'})
     else:
-        return Response({"message": 'You are not moderator! Check status in [2, 4, 5]'})
+        return Response({'error': 'You are not moderator! Check status in [2, 4, 5]'})
 
 
 # Обновляет информацию о марсианской станции по ID модератора
 @swagger_auto_schema(method='put', request_body=MarsStationSerializer)
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation_BY_ADMIN(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation_BY_ADMIN]')
+    error_message, token = get_access_token(request)
+    payload = get_jwt_payload(token)
+    id = payload['id']
 
     try:
         mars_station = MarsStation.objects.get(pk=pk)
     except MarsStation.DoesNotExist:
-        return Response({"message": "MarsStation not found!"}, status=status.HTTP_404_NOT_FOUND)
-    # Изначальный статус заявки должн быть "В работе"
+        return Response({'message': 'MarsStation not found!'}, status=status.HTTP_404_NOT_FOUND)
+    # Изначальный статус заявки должн быть 'В работе'
     if mars_station.status_task != 2:
-        return Response({"message": "Mistake! The application must have the status 'В работе'!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Mistake! The application must have the status "В работе"!'}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.data['status_task'] in [3, 4]:
-        # Получаем пользователя
-        user = request.user
-        moderator = get_object_or_404(Employee, pk=user.id) if user.is_staff else None
-
         mars_station.date_form = date.today()
         mars_station.status_task = request.data['status_task']
         mars_station.status_mission = request.data['status_mission']
-        mars_station.id_moderator_id = moderator.id
+        mars_station.id_moderator_id = id
 
         if request.data['status_task'] in [3, 4]:
             mars_station.date_close = date.today()
 
         mars_station.save()
 
-        return Response({"message": "Successfully updated status"})
+        return Response({'message': 'Successfully updated status'})
     else:
-        return Response({"message": 'You dont updated status "IN PROCESS"! Check status in [3, 4]'})
+        return Response({'message': 'You dont updated status "IN PROCESS"! Check status in [3, 4]'})
 
 
 # Удаляет марсианскую станцию по ID
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def DELETE_MarsStation(request, pk, format=None):
     if not MarsStation.objects.filter(pk=pk).exists():
-        return Response(f"ERROR! There is no such object!")
+        return Response(f'ERROR! There is no such object!')
 
     print('[INFO] API DELETE [DELETE_MarsStation]')
     mars_station = get_object_or_404(MarsStation, pk=pk)
     mars_station.delete()
-    return Response({"message": 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
+    return Response({'message': 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ==================================================================================
@@ -580,7 +593,7 @@ def DELETE_MarsStation(request, pk, format=None):
 # Обновляет информацию о марсианской станции по ID
 @swagger_auto_schema(method='put', request_body=LocationSerializer)
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_Location(request, pk, format=None):
     print('[INFO] API PUT [PUT_Location]')
@@ -596,14 +609,14 @@ def PUT_Location(request, pk, format=None):
             location_serializer = LocationSerializer(location)
             return Response(location_serializer.data)
         except ValueError:
-            return Response({"message": 'Invalid sequence number format'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Invalid sequence number format'}, status=status.HTTP_400_BAD_REQUEST)
     except:
-        return Response({"message": 'Sequence number not provided in the request'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Sequence number not provided in the request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Удаляет марсианскую станцию по ID
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsModerator])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def DELETE_Location(request, pk, format=None):
     print('[INFO] API DELETE [DELETE_Location]')
@@ -614,7 +627,7 @@ def DELETE_Location(request, pk, format=None):
     # Затем удалим сам объект Location
     location.delete()
 
-    return Response({"message": 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
+    return Response({'message': 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ==================================================================================

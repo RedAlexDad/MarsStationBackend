@@ -66,14 +66,14 @@ class EmployeeSerializer(serializers.ModelSerializer):
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'username', 'password', 'is_staff', 'is_superuser']
+        fields = ['id', 'username', 'password', 'is_moderator']
 
 
 # Для аутенфикации, авторизации и регистрации
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'username', 'password', 'is_staff', 'is_superuser']
+        fields = ['id', 'username', 'password', 'is_moderator']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -94,11 +94,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             # Если пароль не предоставлен в запросе, сохраняем текущий пароль
             validated_data['password'] = instance.password
 
-        instance.is_staff = validated_data.get('is_staff', instance.is_staff)
-        instance.is_superuser = validated_data.get('is_superuser', instance.is_superuser)
+        instance.is_moderator = validated_data.get('is_moderator', instance.is_moderator)
         instance.save()
         return instance
 
 class UserAuthorizationSerializer(serializers.Serializer):
-    username = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)

@@ -1,23 +1,53 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 # Пользователь
-class Users(AbstractUser):
+class UserManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('The username field must be set')
+        username = self.normalize_email(username)
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_moderator', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, password, **extra_fields)
+
+# class Users(AbstractUser):
+class Users(AbstractBaseUser, PermissionsMixin):
     id = models.BigAutoField(primary_key=True, serialize=False, verbose_name="ID")
     username = models.CharField(max_length=255, unique=True, verbose_name="Никнейм")
     password = models.CharField(max_length=255, verbose_name="Пароль")
+    is_moderator = models.BooleanField(default=False, verbose_name="Является ли пользователь модератором?")
+
+    # Necessary fields for django
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
-    is_staff = models.BooleanField(default=False, verbose_name="Является ли пользователь менеджером?")
-    is_superuser = models.BooleanField(default=False, verbose_name="Является ли пользователь админом?")
+    # is_staff = models.BooleanField(default=False, verbose_name="Является ли пользователь менеджером?")
+    # is_superuser = models.BooleanField(default=False, verbose_name="Является ли пользователь админом?")
 
     def str(self):
         return self.username
 
+    @property
+    def full_name(self):
+        return f"{self.username}"
+
     class Meta:
         db_table = 'users'
+        verbose_name = "Пользователь"
 
 
 # Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
@@ -38,6 +68,7 @@ class Employee(models.Model):
     class Meta:
         managed = False
         db_table = 'employee'
+        verbose_name = "Сотрудник"
 
 
 # Географический объект (услуга)
@@ -53,6 +84,7 @@ class GeographicalObject(models.Model):
     class Meta:
         managed = False
         db_table = 'geographical_object'
+        verbose_name = "Географический объект"
 
 
 # Транспорт (доп. информация для услуги)
@@ -66,6 +98,7 @@ class Transport(models.Model):
     class Meta:
         managed = False
         db_table = 'transport'
+        verbose_name = "Транспорт"
 
 
 # Марсианская станция (заявка)
@@ -98,12 +131,36 @@ class MarsStation(models.Model):
         verbose_name="ID транспорта",
         null=True, blank=True
     )
-    status_task = models.IntegerField(verbose_name="Статус заявки")
-    status_mission = models.IntegerField(verbose_name="Статус миссии")
+    STATUS_TASK = (
+        (1, 'Введна'),
+        (2, 'В работе'),
+        (3, 'Завершена'),
+        (4, 'Отклонена'),
+        (5, 'Удалена'),
+    )
+
+    STATUS_MISSION = (
+        (1, 'Успех'),
+        (2, 'В работе'),
+        (3, 'Потеря'),
+    )
+
+    status_task = models.IntegerField(choices=STATUS_TASK, default=1, verbose_name="Статус заявки")
+    status_mission = models.IntegerField(choices=STATUS_MISSION, default=2, verbose_name="Статус миссии")
+
+    # Метод, который будет преобразовать код в слова
+    def get_status_task_display_word(self):
+        status_task_dict = dict(self.STATUS_TASK)
+        return status_task_dict.get(self.status_task, 'Unknown')
+
+    def get_status_mission_display_word(self):
+        status_mission_dict = dict(self.STATUS_MISSION)
+        return status_mission_dict.get(self.status_task, 'Unknown')
 
     class Meta:
         managed = False
         db_table = 'mars_station'
+        verbose_name = "Марсианская станция"
 
 
 # Местоположение (вспомогательная таблица)
@@ -128,3 +185,4 @@ class Location(models.Model):
     class Meta:
         managed = False
         db_table = 'location'
+        verbose_name = "Местоположение"

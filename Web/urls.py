@@ -63,10 +63,10 @@ urlpatterns += [
 
     # Регистрация
     path('api/register/', views.RegisterView.as_view()),
-    # Аутентификация и получение токена
+    # Аутентификация
     path('api/authentication/', views.LoginView.as_view()),
-    # Авторизация
-    path('api/authorization/', views.UserView.as_view()),
+    # Получение токена
+    path('api/get_token/', views.GetToken.as_view()),
     # Выход с учетной записи
     path('api/logout/', views.LogoutView.as_view()),
 ]
