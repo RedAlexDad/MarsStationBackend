@@ -205,8 +205,9 @@ class GetToken(APIView):
 
     def post(self, request):
         error_message, access_token = get_access_token(request)
-        print('token:', access_token)
 
+        if access_token is None:
+            return Response(error_message, status=status.HTTP_401_UNAUTHORIZED)
         payload = get_jwt_payload(access_token)
         user = Users.objects.filter(id=payload['id']).first()
         employee = Employee.objects.get(id_user=user.id)

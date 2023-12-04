@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from rest_framework import status, generics
@@ -110,11 +111,30 @@ def GET_GeographicalObjects(request, pk=None, format=None):
     # Получение ID черновика
     id_draft_service = None
     try:
-        mars_station = MarsStation.objects.filter(status_task=1, status_mission=3).last()
-        if mars_station:
-            id_draft_service = mars_station.id
-    except MarsStation.DoesNotExist:
-        id_draft_service = {"error": "MarsStation not found"}
+        # Получаем пользователя
+        error_message, token = get_access_token(request)
+        payload = get_jwt_payload(token)
+        id = payload['id']
+
+        user = Users.objects.get(id=id)
+        if user.is_moderator:
+            return Response(data={'error': f'Error, user isnt employee'}, status=status.HTTP_400_BAD_REQUEST)
+
+        employee = get_object_or_404(Employee, pk=id)
+        try:
+            # Находим заявку с таким статусом
+            mars_station = MarsStation.objects.filter(
+                status_task=1,
+                status_mission=2,
+                id_employee=employee
+            ).last()
+            if mars_station:
+                id_draft_service = mars_station.id
+        except MarsStation.DoesNotExist:
+            id_draft_service = {"error": "MarsStation not found"}
+    except Exception as error:
+        # id_draft_service = {"error": error}
+        pass
 
     # Создадим словарь с желаемым форматом ответа
     response_data = {
@@ -122,7 +142,7 @@ def GET_GeographicalObjects(request, pk=None, format=None):
         "next": paginator.get_next_link(),
         "previous": paginator.get_previous_link(),
         "id_draft_service": id_draft_service,
-        "results": {"service": geographical_object_serializer.data}
+        "results": geographical_object_serializer.data
     }
 
     return Response(response_data)
@@ -291,17 +311,23 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
     try:
         geographical_object = GeographicalObject.objects.get(pk=pk_service)
     except GeographicalObject.DoesNotExist:
-        return Response(f"ERROR! Object GeographicalObject there is no such object by ID!",
+        return Response({'error': f'ERROR! Object GeographicalObject there is no such object by ID!'},
                         status=status.HTTP_404_NOT_FOUND)
 
     # Получаем пользователя
-    user = request.user
-    employee = get_object_or_404(Employee, pk=user.id) if not user.is_staff else None
+    error_message, token = get_access_token(request)
+    payload = get_jwt_payload(token)
+    id = payload['id']
 
+    user = Users.objects.get(id=id)
+    if user.is_moderator:
+        return Response(data={'error': f'Error, user isnt employee'}, status=status.HTTP_400_BAD_REQUEST)
+
+    employee = get_object_or_404(Employee, pk=id)
     # Находим заявку с таким статусом
     mars_station = MarsStation.objects.filter(
         status_task=1,
-        status_mission=3,
+        status_mission=2,
         id_employee=employee
     ).last()
 
@@ -313,25 +339,39 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
         mars_station = MarsStation.objects.create(
             date_create=date.today(),
             status_task=1,
-            status_mission=3,
+            status_mission=2,
             id_employee=employee
         )
-
         print({"message": 'Create new statement'})
+
+    location = Location.objects.filter(id_mars_station_id=mars_station.id).all()
+    location_serializer = LocationSerializer(location, many=True)
 
     # Создание записи в таблице Location для связи между MarsStation и GeographicalObject
     Location.objects.create(
         id_geographical_object=geographical_object,
         id_mars_station=mars_station,
+        sequence_number=int(location_serializer.data.__len__() + 1)
     )
-    return Response(data={"message": f'Successfully created, ID: {mars_station.id}'}, status=status.HTTP_201_CREATED)
+
+    # Получаем список географических объектов от ID черновика или других статусов
+    geographical_object = GeographicalObject.objects.filter(location__id_mars_station=mars_station)
+    geographical_objects_serializer = GeographicalObjectSerializer(geographical_object, many=True)
+
+    data = {
+        'message': f'Successfully created!',
+        'id_draft': mars_station.id,
+        'geographical_object': geographical_objects_serializer.data
+    }
+
+    return Response(data=data, status=status.HTTP_201_CREATED)
 
 
 # ==================================================================================
 # ЗАЯВКА
 # ==================================================================================
 
-def info_request_mars_station(request, pk_mars_station, format=None):
+def info_request_mars_station(request=None, pk_mars_station=None, format=None):
     try:
         mars_station = get_object_or_404(MarsStation, pk=pk_mars_station)
     except Http404 as error:
@@ -379,7 +419,8 @@ def info_request_mars_station(request, pk_mars_station, format=None):
             geographical_object = get_object_or_404(GeographicalObject, id=location.id_geographical_object.id)
             geographical_object_serializer.append(GeographicalObjectSerializer(geographical_object).data)
         except Http404 as error:
-            return Response({"message": "GeographicalObject not found", "error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "GeographicalObject not found", "error": str(error)},
+                            status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
             return Response({"message": "An error occurred", "error": str(error)},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -421,63 +462,50 @@ def GET_MarsStationList(request, format=None):
         mars_station = MarsStation.objects.all()
 
     # Получим параметры запроса из URL
-    type_status = request.GET.get('type_status')
-    status_task = request.GET.get('status_task')
-    status_mission = request.GET.get('status_mission')
-    date_create = request.GET.get('date_create')
-    date_close = request.GET.get('date_close')
-    # Дата после
+    params = {
+        'status_task__in': request.GET.get('status_task').split(';') if request.GET.get('status_task') else [],
+        'status_mission': request.GET.get('status_mission'),
+        'date_create': request.GET.get('date_create'),
+        'date_close': request.GET.get('date_close'),
+    }
     date_form_after = request.GET.get('date_form_after')
-    # Дата ДО
     date_form_before = request.GET.get('date_form_before')
 
-    # Проверяет, пустой запрос на фильтр
-    if all(item is None for item in
-           [type_status, status_task, status_mission, date_create, date_close, date_form_after, date_form_before]):
-        # Сериализиуем его, чтобы получить в формате JSON
-        mars_station_serializer = MarsStationSerializer(mars_station, many=True)
-
+    # Проверим, пустой ли запрос на фильтр
+    if (all(value is None for value in params.values())
+            and date_form_after is None
+            and date_form_before is None
+    ):
         # Вызываем функцию get_mars_station_info для каждой станции
-        result_data = []
-        for station in mars_station:
-            station_info = info_request_mars_station(request, station.id)
-            result_data.append(station_info.data)
-
+        result_data = [info_request_mars_station(pk_mars_station=station.pk).data for station in mars_station]
         return Response(result_data)
-    else:
-        # Применим фильтры на основе параметров запроса, если они предоставлены
-        if type_status:
-            mars_station = mars_station.filter(type_status=type_status)
-        if status_task:
-            mars_station = mars_station.filter(status_task=status_task)
-        if status_mission:
-            mars_station = mars_station.filter(status_mission=status_mission)
-        if date_create:
-            mars_station = mars_station.filter(date_create=date_create)
-        if date_close:
-            mars_station = mars_station.filter(date_close=date_close)
+    # Формируем фильтры на основе параметров запроса
+    filters = Q()
 
-        # Дата формирования ПОСЛЕ
-        if date_form_after and date_form_before is None:
-            mars_station = mars_station.filter(date_form__gte=date_form_after)
-        # Дата формирования ДО
-        if date_form_after is None and date_form_before:
-            mars_station = mars_station.filter(date_form__lte=date_form_before)
+    for key, value in params.items():
+        if value is not None:
+            if key == 'status_task':
+                filters &= Q(**{f'{key}__in': value})
+            else:
+                filters &= Q(**{key: value})
 
-        # Дата формирования ПОСЛЕ и ДО
-        if date_form_after and date_form_before:
-            if date_form_after > date_form_before:
-                return Response('Mistake! It is impossible to sort when "BEFORE" exceeds "AFTER"!')
-            mars_station = mars_station.filter(date_form__gte=date_form_after)
-            mars_station = mars_station.filter(date_form__lte=date_form_before)
+    # Добавим фильтры по дате
+    if date_form_after and date_form_before:
+        if date_form_after > date_form_before:
+            return Response('Mistake! It is impossible to sort when "BEFORE" exceeds "AFTER"!')
+        filters &= Q(date_form__gte=date_form_after, date_form__lte=date_form_before)
+    elif date_form_after:
+        filters &= Q(date_form__gte=date_form_after)
+    elif date_form_before:
+        filters &= Q(date_form__lte=date_form_before)
 
-        # Вызываем функцию get_mars_station_info для каждой станции
-        result_data = []
-        for station in mars_station:
-            station_info = info_request_mars_station(station.id)
-            result_data.append(station_info.data)
+    # Применяем фильтры к mars_station
+    if filters:
+        mars_station = mars_station.filter(filters)
 
-        return Response(result_data)
+    # Вызываем функцию get_mars_station_info для каждой станции
+    result_data = [info_request_mars_station(pk_mars_station=station.pk).data for station in mars_station]
+    return Response(result_data)
 
 
 # Возвращает данные о марсианской станции
@@ -523,11 +551,13 @@ def PUT_MarsStation_BY_USER(request, pk, format=None):
         return Response({"error": 'MarsStation not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if mars_station.status_task == request.data['status_task']:
-        return Response({'error': f'This application already has the status "{mars_station.get_status_task_display_word()}"'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'error': f'This application already has the status "{mars_station.get_status_task_display_word()}"'},
+            status=status.HTTP_400_BAD_REQUEST)
 
     if mars_station.status_task in [3, 4, 5]:
-        return Response({'error': 'You cant edit it because the application process has already been completed'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'You cant edit it because the application process has already been completed'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     if request.data['status_task'] in [2, 4, 5]:
         mars_station.status_task = request.data['status_task']
@@ -554,7 +584,8 @@ def PUT_MarsStation_BY_ADMIN(request, pk, format=None):
         return Response({'message': 'MarsStation not found!'}, status=status.HTTP_404_NOT_FOUND)
     # Изначальный статус заявки должн быть 'В работе'
     if mars_station.status_task != 2:
-        return Response({'message': 'Mistake! The application must have the status "В работе"!'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Mistake! The application must have the status "В работе"!'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     if request.data['status_task'] in [3, 4]:
         mars_station.date_form = date.today()

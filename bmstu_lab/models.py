@@ -132,16 +132,16 @@ class MarsStation(models.Model):
         null=True, blank=True
     )
     STATUS_TASK = (
-        (1, 'Введна'),
+        (1, 'Черновик'),
         (2, 'В работе'),
         (3, 'Завершена'),
-        (4, 'Отклонена'),
+        (4, 'Отменена'),
         (5, 'Удалена'),
     )
 
     STATUS_MISSION = (
-        (1, 'Успех'),
-        (2, 'В работе'),
+        (1, 'В работе'),
+        (2, 'Успех'),
         (3, 'Потеря'),
     )
 
@@ -181,6 +181,7 @@ class Location(models.Model):
         related_name='id_mars_station_location',  # Пользовательское имя
         verbose_name="ID марсианской станции"
     )
+    sequence_number = models.IntegerField(verbose_name="Порядковый номер")
 
     class Meta:
         managed = False

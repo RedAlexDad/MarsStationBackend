@@ -104,13 +104,16 @@ def get_jwt_payload(access_token):
 
 def get_access_token(request):
     error_message = None
-    access_token = request.COOKIES.get('access_token')
-
-    if access_token is None:
-        access_token = request.data.get('access_token')
+    access_token = None
 
     if access_token is None:
         access_token = request.headers.get("authorization")
+        if access_token == 'undefined':
+            access_token = None
+    elif access_token is None:
+        access_token = request.COOKIES.get('access_token')
+    else:
+        access_token = request.data.get('access_token')
 
     # Получение имени пользователя из Redis по токену
     try:

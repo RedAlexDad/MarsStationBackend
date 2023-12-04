@@ -30,10 +30,11 @@ CREATE TABLE transport
 -- Местоположение
 CREATE TABLE location
 (
-    -- Порядковый номер
     id                     SERIAL PRIMARY KEY,
     id_geographical_object INT NOT NULL,
-    id_mars_station        INT NOT NULL
+    id_mars_station        INT NOT NULL,
+    -- Порядковый номер
+    sequence_number INT NULL
 );
 
 -- Марсианская станция

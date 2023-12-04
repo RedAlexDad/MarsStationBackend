@@ -30,10 +30,11 @@ CREATE TABLE transport
 -- Местоположение
 CREATE TABLE location
 (
-    -- Порядковый номер
     id                     SERIAL PRIMARY KEY,
     id_geographical_object INT NOT NULL,
-    id_mars_station        INT NOT NULL
+    id_mars_station        INT NOT NULL,
+    -- Порядковый номер
+    sequence_number INT NULL
 );
 
 -- Марсианская станция
@@ -77,7 +78,7 @@ CREATE TABLE employee
 --     id       SERIAL PRIMARY KEY,
 --     username    VARCHAR NOT NULL,
 --     password VARCHAR NOT NULL,
---     is_superuser    BOOLEAN NOT NULL
+--     is_moderator    BOOLEAN NOT NULL
 -- );
 
 -- СВЯЗЫВАНИЕ БД ВНЕШНИМИ КЛЮЧАМИ --
@@ -107,14 +108,14 @@ ALTER TABLE employee
 
 
 -- ПОЛЬЗОВАТЕЛЬ (АУТЕНФИКАЦИЯ)
--- INSERT INTO users (username, password, is_superuser)
--- VALUES ('user1', 'user1', false),
---        ('user2', 'user2', false),
---        ('admin1', 'admin1', true),
---        ('admin2', 'admin2', true);
+INSERT INTO users (id, username, password, is_moderator, last_login, is_active, is_staff, is_superuser)
+VALUES (1, 'user1', 'user1', false, NULL, false, false, false),
+       (2, 'user2', 'user2', false, NULL, false, false, false),
+       (3, 'admin1', 'admin1', true, NULL, false, false, false),
+       (4, 'admin2', 'admin2', true, NULL, false, false, false);
 --
--- SELECT *
--- FROM users;
+SELECT *
+FROM users;
 
 -- Начальник (ПРИНМАЮЩИЙ ЗАКАЗЧИКА) и Ученые (ЗАКАЗЧИК)
 INSERT INTO employee (full_name, post, name_organization, address, id_user)
@@ -184,12 +185,12 @@ VALUES ('Исследовательская', '1972-09-01', '1973-11-04', '1975-
 SELECT * FROM mars_station;
 
 -- МЕСТОПОЛОЖЕНИЕ (ВСПОМОГАТЕЛЬНАЯ ТАБЛИЦА ДЛЯ М-М УСЛУГА-ЗАЯВКА)
-INSERT INTO location (id_geographical_object, id_mars_station)
-VALUES (1, 1),
-       (2, 2),
-       (3, 3),
-       (4, 4),
-       (5, 5);
+INSERT INTO location (id_geographical_object, id_mars_station, sequence_number)
+VALUES (1, 1, 1),
+       (2, 2, 1),
+       (3, 3, 1),
+       (4, 4, 1),
+       (5, 5, 1);
 
 SELECT *
 FROM location;
