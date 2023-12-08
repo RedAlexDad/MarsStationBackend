@@ -110,7 +110,7 @@ def GET_GeographicalObjects(request, pk=None, format=None):
         "next": paginator.get_next_link(),
         "previous": paginator.get_previous_link(),
         "id_draft_service": id_draft_service,
-        "results": {"service": geographical_object_serializer.data}
+        "results": geographical_object_serializer.data
     }
 
     return Response(response_data)

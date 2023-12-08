@@ -27,11 +27,9 @@ SECRET_KEY = "django-insecure-sa)*16_6lp3s!l^z+r8!qce1jcjex1(blp*&49l%!n#k!+etiy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['192.168.108.141', '192.168.1.53', '*']
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -66,6 +64,8 @@ CORS_ALLOWED_ORIGINS = [
     # Backend
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    # Native Application
+    "http://192.168.1.53:8000",
 ]
 
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
