@@ -140,6 +140,7 @@ class MarsStation(models.Model):
     )
 
     STATUS_MISSION = (
+        (0, 'Не удалось обратиться к асинхронному сервису'),
         (1, 'В работе'),
         (2, 'Успех'),
         (3, 'Потеря'),
@@ -155,7 +156,7 @@ class MarsStation(models.Model):
 
     def get_status_mission_display_word(self):
         status_mission_dict = dict(self.STATUS_MISSION)
-        return status_mission_dict.get(self.status_task, 'Unknown')
+        return status_mission_dict.get(self.status_mission, 'Unknown')
 
     class Meta:
         managed = False

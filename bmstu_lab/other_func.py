@@ -1,3 +1,5 @@
+from django.http import QueryDict
+from django.core.handlers.asgi import ASGIRequest
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
@@ -26,8 +28,7 @@ from datetime import date
 import threading, tempfile, requests
 # Изображение
 from PIL import Image
-import io
-
+import io, json
 # Возвращает список географические объекты
 from rest_framework.pagination import PageNumberPagination
 
@@ -125,7 +126,7 @@ def GET_GeographicalObjects(request, pk=None, format=None):
             # Находим заявку с таким статусом
             mars_station = MarsStation.objects.filter(
                 status_task=1,
-                status_mission=2,
+                status_mission=1,
                 id_employee=employee
             ).last()
             if mars_station:
@@ -327,7 +328,7 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
     # Находим заявку с таким статусом
     mars_station = MarsStation.objects.filter(
         status_task=1,
-        status_mission=2,
+        status_mission=1,
         id_employee=employee
     ).last()
 
@@ -339,7 +340,7 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
         mars_station = MarsStation.objects.create(
             date_create=date.today(),
             status_task=1,
-            status_mission=2,
+            status_mission=1,
             id_employee=employee
         )
         print({"message": 'Create new statement'})
@@ -545,6 +546,16 @@ def PUT_MarsStation(request, pk, format=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def PUT_MarsStation_BY_USER(request, pk, format=None):
     print('[INFO] API PUT [PUT_MarsStation_BY_USER]')
+    error_message, token = get_access_token(request)
+    payload = get_jwt_payload(token)
+    id = payload['id']
+
+    user = Users.objects.get(id=id)
+    if user.is_moderator:
+        return Response(data={'error': f'Error, user isnt employee'}, status=status.HTTP_400_BAD_REQUEST)
+
+    employee = get_object_or_404(Employee, pk=id)
+
     try:
         mars_station = MarsStation.objects.get(pk=pk)
     except MarsStation.DoesNotExist:
@@ -555,13 +566,31 @@ def PUT_MarsStation_BY_USER(request, pk, format=None):
             {'error': f'This application already has the status "{mars_station.get_status_task_display_word()}"'},
             status=status.HTTP_400_BAD_REQUEST)
 
-    if mars_station.status_task in [3, 4, 5]:
+    if mars_station.status_task in [3, 4]:
         return Response({'error': 'You cant edit it because the application process has already been completed'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    if request.data['status_task'] in [2, 4, 5]:
+    if request.data['status_task'] in [2, 5]:
         mars_station.status_task = request.data['status_task']
-        mars_station.save()
+        id_draft = mars_station.id
+        # Асинхронный веб-сервис
+        url = 'http://127.0.0.1:5000/api/async_calc/'
+
+        data = {
+            'id_draft': id_draft,
+            'access_token': token
+        }
+        try:
+            response = requests.post(url, data=data)
+
+            if response.status_code == 200:
+                mars_station.status_mission = 1
+            else:
+                mars_station.status_mission = 0
+
+            mars_station.save()
+        except Exception as error:
+            print(error)
         return Response({'message': 'Successfully updated status'})
     else:
         return Response({'error': 'You are not moderator! Check status in [2, 4, 5]'})
@@ -682,3 +711,36 @@ def GET_Transport(request, format=None):
     transport_serializer = TypeTransportSerializer(transport, many=True)
 
     return Response(transport_serializer.data)
+
+# ==================================================================================
+# АСИНХРОННЫЙ ВЕБ СЕРВИС
+# ==================================================================================
+
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def PUT_async_result(request, format=None):
+    print('[INFO] API PUT [PUT_async_result]')
+    try:
+        # Преобразуем строку в объект Python JSON
+        json_data = json.loads(request.body.decode('utf-8'))
+        print(json_data)
+
+        payload = get_jwt_payload(json_data['access_token'])
+        id = payload['id']
+        employee = get_object_or_404(Employee, pk=id) if not request.user.is_staff else None
+        # Изменяем значение sequence_number
+        try:
+            # Выводит конкретную заявку создателя
+            mars_station = get_object_or_404(MarsStation, id_employee=employee.id, pk=json_data['id_draft'])
+            mars_station.status_mission = json_data['status_mission']
+            # Сохраняем объект Location
+            mars_station.save()
+            mars_station_serializer = MarsStationSerializer(mars_station, many=False)
+            return Response(data={'message': 'Successfully updated!', 'data': mars_station_serializer.data},
+                            status=status.HTTP_200_OK)
+        except ValueError:
+            return Response({'message': 'Invalid sequence number format'}, status=status.HTTP_400_BAD_REQUEST)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return Response(data={'message': 'Error decoding JSON'}, status=status.HTTP_400_BAD_REQUEST)

@@ -104,4 +104,7 @@ urlpatterns += [
 
     # Транспорт
     path(r'api/transport/', other_func.GET_Transport),
+
+    # Асинхронный веб-сервис
+    path(r'api/async_result/', other_func.PUT_async_result),
 ]
