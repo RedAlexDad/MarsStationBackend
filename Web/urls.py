@@ -81,7 +81,8 @@ urlpatterns += [
     path(r'api/geographical_object/', other_func.GET_GeographicalObjects),
     path(r'api/geographical_object/<int:pk>/', other_func.GET_GeographicalObject),
     path(r'api/geographical_object/create/', other_func.POST_GeograficObject),
-    # TODO: Еще создать один PUT метод для изображения
+    path('api/geographical_object/<int:pk>/image/', other_func.GET_GeograficObject_IMAGE),
+    path('api/geographical_object/<int:pk>/update_image/', other_func.PUT_GeograficObject_IMAGE),
     path(r'api/geographical_object/<int:pk>/update/', other_func.PUT_GeograficObject),
     path(r'api/geographical_object/<int:pk>/delete/', other_func.DELETE_GeograficObject),
     path(r'api/geographical_object/<int:pk_service>/create_service_in_task/',
@@ -89,7 +90,6 @@ urlpatterns += [
 
     # ЗАЯВКА (МАРСИАНСКАЯ СТАНЦИЯ)
     # Заявки - список, одна запись, изменение, статусы создателя, статусы модератора, удаление
-    # TODO: Добавить фильтрацию все заявки кроме черновика / удалена
     path(r'api/mars_station/', other_func.GET_MarsStationList),
     path(r'api/mars_station/<int:pk>/', other_func.GET_MarsStation),
     path(r'api/mars_station/<int:pk>/update/', other_func.PUT_MarsStation),

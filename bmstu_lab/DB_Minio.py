@@ -151,7 +151,17 @@ class DB_Minio():
             # print(url)
             return url
         except Exception as ex:
-            print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
+            print(f'[ERROR] Не удалось получить данные. \n{ex}')
+
+    def get_object(self, bucket_name: str, object_name: str):
+        try:
+            object_data = self.client.get_object(
+                bucket_name=bucket_name,
+                object_name=object_name,
+            )
+            return object_data.read()
+        except Exception as ex:
+            print(f'[ERROR] Не удалось получить данные. \n{ex}')
 
     # Вставляет картинки в бакет с ссылки внешних источников
     # https://min.io/docs/minio/linux/developers/python/API.html#put_object

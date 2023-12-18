@@ -5,54 +5,6 @@ from bmstu_lab.models import MarsStation, Employee, Location, GeographicalObject
 from rest_framework import serializers
 
 
-class GeographicalObjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        # Модель, которую мы сериализуем
-        model = GeographicalObject
-        # Либо весь поля записываем
-        fields = '__all__'
-
-
-class GeographicalObjectPhotoSerializer(serializers.ModelSerializer):
-    class Meta:
-        # Модель, которую мы сериализуем
-        model = GeographicalObject
-        # Либо весь поля записываем
-        fields = ('id', 'photo')
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = '__all__'
-
-
-class TransportSerializer(serializers.ModelSerializer):
-    class Meta:
-        # Модель, которую мы сериализуем
-        model = Transport
-        # Либо весь поля записываем
-        fields = '__all__'
-
-
-class TypeTransportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transport
-        fields = ['id', 'type']
-
-
-class MarsStationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MarsStation
-        # Либо весь поля записываем
-        fields = '__all__'
-
-
-class GeograficalObjectAndTransports(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-
-
 # ==================================================================================
 # АККАУНТЫ
 # ==================================================================================
@@ -98,6 +50,72 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class UserAuthorizationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
+
+
+# ==================================================================================
+# ДРУГИЕ МОДЕЛИ
+# ==================================================================================
+
+class GeographicalObjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        # Модель, которую мы сериализуем
+        model = GeographicalObject
+        # Либо весь поля записываем
+        fields = '__all__'
+
+
+class GeographicalObjectPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        # Модель, которую мы сериализуем
+        model = GeographicalObject
+        # Либо весь поля записываем
+        fields = ('id', 'photo')
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = '__all__'
+
+
+class TransportSerializer(serializers.ModelSerializer):
+    class Meta:
+        # Модель, которую мы сериализуем
+        model = Transport
+        # Либо весь поля записываем
+        fields = '__all__'
+
+
+class TypeTransportSerializerID_TYPE(serializers.ModelSerializer):
+    class Meta:
+        model = Transport
+        fields = ['id', 'type']
+
+
+class MarsStationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarsStation
+        fields = '__all__'
+
+
+class MarsStationSerializerDetail(serializers.ModelSerializer):
+    employee = EmployeeSerializer(required=False)
+    moderator = EmployeeSerializer(required=False)
+    transport = TransportSerializer(required=False)
+    location = LocationSerializer(required=False, many=True)
+    geographical_object = GeographicalObjectSerializer(required=False, many=True)
+
+    class Meta:
+        model = MarsStation
+        fields = '__all__'
+
+class GeograficalObjectAndTransports(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+
+
+

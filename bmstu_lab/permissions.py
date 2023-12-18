@@ -119,7 +119,7 @@ def get_access_token(request):
     try:
         stored_username = session_storage.get(access_token)
         if not stored_username:
-            return Response({'message': 'Token is not valid'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'Токен недействителен'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as error:
         error_message = {'redis_status': False, 'error': str(error)}
         print('Ошибка соединения с Redis. \nLOG:', error)

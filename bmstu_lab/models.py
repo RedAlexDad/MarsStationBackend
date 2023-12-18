@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, PermissionsMixin, BaseUserManager
 
+
 # Пользователь
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -18,6 +19,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, password, **extra_fields)
+
 
 # class Users(AbstractUser):
 class Users(AbstractBaseUser, PermissionsMixin):
@@ -62,7 +64,7 @@ class Employee(models.Model):
         Users,
         on_delete=models.CASCADE,
         db_column='id_user',
-        verbose_name="ID пользователя"
+        verbose_name="ID пользователя",
     )
 
     class Meta:
@@ -78,7 +80,7 @@ class GeographicalObject(models.Model):
     type = models.CharField(max_length=255, verbose_name="Тип")
     size = models.IntegerField(null=True, blank=True, verbose_name="Площадь")
     describe = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Описание")
-    photo = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Ссылка на изображение Minio")
+    photo = models.BinaryField(null=True, blank=True, verbose_name="Изображение")
     status = models.BooleanField(verbose_name="Статус объекта: доступен / недоступен")
 
     class Meta:
@@ -90,10 +92,10 @@ class GeographicalObject(models.Model):
 # Транспорт (доп. информация для услуги)
 class Transport(models.Model):
     id = models.BigAutoField(primary_key=True, serialize=False, verbose_name="ID")
-    name = models.CharField(max_length=255, verbose_name="Название")
+    name = models.CharField(max_length=255, null=True, blank=True, verbose_name="Название")
     type = models.CharField(max_length=255, verbose_name="Тип")
     describe = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Описание")
-    photo = models.CharField(max_length=1000, null=True, blank=True, verbose_name="Ссылка на изображение Minio")
+    photo = models.BinaryField(max_length=1000, null=True, blank=True, verbose_name="Изображение")
 
     class Meta:
         managed = False
@@ -157,6 +159,15 @@ class MarsStation(models.Model):
     def get_status_mission_display_word(self):
         status_mission_dict = dict(self.STATUS_MISSION)
         return status_mission_dict.get(self.status_mission, 'Unknown')
+
+    # Метод, который будет преобразовывать строку в число
+    def convert_status_task_string_to_number(self, status_string):
+        status_task_dict = {v: k for k, v in dict(self.STATUS_TASK).items()}
+        return status_task_dict.get(status_string, None)
+
+    def convert_status_mission_string_to_number(self, status_string):
+        status_mission_dict = {v: k for k, v in dict(self.STATUS_MISSION).items()}
+        return status_mission_dict.get(status_string, None)
 
     class Meta:
         managed = False

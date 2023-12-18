@@ -36,7 +36,7 @@ class UsersGET(APIView):
         print('[INFO] API GET [UsersINFO]')
         users = self.model_class.objects.all()
         serializer = self.serializer_class(users, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UsersPUT(APIView):
@@ -65,7 +65,7 @@ class UsersDELETE(APIView):
         print('[INFO] API DELETE [UsersINFO]')
         users = get_object_or_404(self.model_class, pk=pk)
         users.delete()
-        return Response(data={'message': 'Successfully'}, status=status.HTTP_204_NO_CONTENT)
+        return Response(data={'message': 'Успешно'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ==================================================================================
@@ -82,7 +82,7 @@ class EmployeeClass(APIView):
         print('[INFO] API GET [Employee GET]')
         employees = self.model_class.objects.all()
         serializer = self.serializer_class(employees, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=serializer_class)
     def post(self, request, format=None):
@@ -91,7 +91,7 @@ class EmployeeClass(APIView):
         try:
             user = Users.objects.get(pk=request.data['id_user'])
         except Users.DoesNotExist:
-            return Response(f"ERROR! Object Users there is no such object by ID!",
+            return Response(f"Пользователи объекта по {request.data['id_user']} нет",
                             status=status.HTTP_404_NOT_FOUND)
 
         serializer = self.serializer_class(data=request.data)
@@ -109,7 +109,7 @@ class EmployeeClass(APIView):
         serializer = self.serializer_class(users, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -146,11 +146,12 @@ class RegisterView(APIView):
                 employee_serializer.is_valid(raise_exception=True)
                 employee_serializer.save()
 
-                return Response(data={"user": user_serializer.data, "employee": employee_serializer.data})
+                return Response(data={"user": user_serializer.data, "employee": employee_serializer.data},
+                                status=status.HTTP_200_OK)
             except AssertionError as error:
-                return Response(data={"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"message": str(error)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            return Response(data={"error": str(error)}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={"message": str(error)}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Аутентификация
@@ -167,7 +168,7 @@ class LoginView(APIView):
 
         user = authenticate(**user_serializer.data)
         if user is None:
-            return Response({'message': 'User not found! Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'Такого аккаунта не найдены. Вы неверно ввели свои учетные данные'}, status=status.HTTP_401_UNAUTHORIZED)
 
         error_message, access_token = create_access_token(user)
         employee = Employee.objects.get(id_user=user.id)
@@ -187,7 +188,7 @@ class LoginView(APIView):
                 'name_organization': employee.name_organization,
                 'address': employee.address
             },
-            'message': 'Successfully',
+            'message': 'Успешно',
             'access_token': access_token,
         }
 
@@ -225,7 +226,7 @@ class GetToken(APIView):
                 'name_organization': employee.name_organization,
                 'address': employee.address
             },
-            'message': 'Successfully',
+            'message': 'Успешно',
             'access_token': access_token,
         }
         # Добавляем error_message, если есть ошибка
@@ -244,7 +245,7 @@ class LogoutView(APIView):
 
         # Проверка наличия токена
         if access_token is None:
-            return Response({'error': 'No access_token token found. Token is not found in cookie. You are already logged out'},
+            return Response({'message': 'Токен в access_token и cookie не найден. Скорее всего вы уже вышли из системы?'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
         # Добавление токена в черный список в Redis
@@ -254,7 +255,7 @@ class LogoutView(APIView):
         # Удаление куки с токеном
         response.delete_cookie('access_token')
         response.data = {
-            'message': 'Successfully',
+            'message': 'Успешно',
             'is_token_in_blacklist': bool(token_exists)
         }
 
