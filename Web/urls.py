@@ -99,8 +99,8 @@ urlpatterns += [
 
     # М-М (МЕСТОПОЛОЖЕНИЕ)
     # м-м - удаление из заявки, изменение количества/значения в м-м
-    path(r'api/location/<int:pk>/delete/', other_func.DELETE_Location),
-    path(r'api/location/<int:pk>/update/', other_func.PUT_Location),
+    path(r'api/location/<int:pk_location>/mars_station/<int:pk_mars_station>/delete/', other_func.DELETE_Location),
+    path(r'api/location/<int:pk_location>/mars_station/<int:pk_mars_station>/update/', other_func.PUT_Location),
 
     # Транспорт
     path(r'api/transport/', other_func.GET_Transport),

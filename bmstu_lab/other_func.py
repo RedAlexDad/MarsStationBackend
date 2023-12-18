@@ -2,7 +2,7 @@ from django.http import QueryDict
 from django.core.handlers.asgi import ASGIRequest
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, F, Max
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from rest_framework import status, generics
@@ -354,24 +354,32 @@ def POST_GeograficObject_IN_MarsStation(request, pk_service, format=None):
         )
         print({"message": 'Create new statement'})
 
-    location = Location.objects.filter(id_mars_station_id=mars_station.id).all()
-    location_serializer = LocationSerializer(location, many=True)
+    # Получаем максимальный порядковый номер для данной марсианской станции
+    max_sequence_number = Location.objects.filter(id_mars_station=mars_station).aggregate(Max('sequence_number'))[
+        'sequence_number__max']
 
-    # Создание записи в таблице Location для связи между MarsStation и GeographicalObject
+    # Если нет существующих записей, устанавливаем порядковый номер в 1
+    sequence_number = max_sequence_number + 1 if max_sequence_number else 1
+
+    # Создаем новый объект Location
     Location.objects.create(
         id_geographical_object=geographical_object,
         id_mars_station=mars_station,
-        sequence_number=int(location_serializer.data.__len__() + 1)
+        sequence_number=sequence_number
     )
 
     # Получаем список географических объектов от ID черновика или других статусов
     geographical_object = GeographicalObject.objects.filter(location__id_mars_station=mars_station)
     geographical_objects_serializer = GeographicalObjectSerializer(geographical_object, many=True)
 
+    location = Location.objects.filter(id_mars_station_id=mars_station.id).all()
+    location_serializer = LocationSerializer(location, many=True)
+
     data = {
         'message': f'Successfully created!',
         'id_draft': mars_station.id,
-        'geographical_object': geographical_objects_serializer.data
+        'geographical_object': geographical_objects_serializer.data,
+        'location': location_serializer.data
     }
 
     return Response(data=data, status=status.HTTP_201_CREATED)
@@ -518,22 +526,22 @@ def GET_MarsStationList(request, format=None):
     result_data = [info_request_mars_station(pk_mars_station=station.pk).data for station in mars_station]
 
     # Пагинации
-    paginator = PageNumberPagination()
-    # Количество элементов на странице
-    paginator.page_size = 2
-    # Параметр запроса для изменения количества элементов на странице
-    paginator.page_size_query_param = 'page_size'
-    # Максимальное количество элементов на странице
-    paginator.max_page_size = 5
+    # paginator = PageNumberPagination()
+    # # Количество элементов на странице
+    # paginator.page_size = 100
+    # # Параметр запроса для изменения количества элементов на странице
+    # paginator.page_size_query_param = 'page_size'
+    # # Максимальное количество элементов на странице
+    # paginator.max_page_size = 100
 
-    result_page = paginator.paginate_queryset(result_data, request)
+    # result_page = paginator.paginate_queryset(result_data, request)
 
     # Создадим словарь с желаемым форматом ответа
     response_data = {
-        "count": paginator.page.paginator.count,
-        "next": paginator.get_next_link(),
-        "previous": paginator.get_previous_link(),
-        "results": result_page
+        # "count": paginator.page.paginator.count,
+        # "next": paginator.get_next_link(),
+        # "previous": paginator.get_previous_link(),
+        "results": result_data
     }
 
     return Response(response_data)
@@ -593,6 +601,7 @@ def PUT_MarsStation_BY_USER(request, pk, format=None):
 
     # Меняет на статус "В работе"
     mars_station.status_task = 2
+    mars_station.date_form = date.today()
 
     # Подключение к асинхронному веб-сервису
     const_token = "my_secret_token"
@@ -639,9 +648,7 @@ def PUT_MarsStation_BY_ADMIN(request, pk, format=None):
                         status=status.HTTP_400_BAD_REQUEST)
 
     if request.data['status_task'] in [3, 4]:
-        mars_station.date_form = date.today()
         mars_station.status_task = request.data['status_task']
-        mars_station.status_mission = request.data['status_mission']
         mars_station.id_moderator_id = id
 
         if request.data['status_task'] in [3, 4]:
@@ -688,41 +695,72 @@ def DELETE_MarsStation(request, pk, format=None):
 # Обновляет информацию о марсианской станции по ID
 @swagger_auto_schema(method='put', request_body=LocationSerializer)
 @api_view(['PUT'])
-@permission_classes([IsModerator])
+@permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def PUT_Location(request, pk, format=None):
+def PUT_Location(request, pk_location, pk_mars_station, format=None):
     print('[INFO] API PUT [PUT_Location]')
-    location = get_object_or_404(Location, pk=pk)
+    location = get_object_or_404(Location, pk=pk_location)
+    direction = request.data['direction']
 
-    # Изменяем значение sequence_number
-    try:
-        try:
-            location.id_geographical_object_id = int(request.data['id_geographical_object'])
-            location.id_mars_station_id = int(request.data['id_mars_station'])
-            # Сохраняем объект Location
-            location.save()
-            location_serializer = LocationSerializer(location)
-            return Response(location_serializer.data)
-        except ValueError:
-            return Response({'message': 'Invalid sequence number format'}, status=status.HTTP_400_BAD_REQUEST)
-    except:
-        return Response({'message': 'Sequence number not provided in the request'}, status=status.HTTP_400_BAD_REQUEST)
+    # Получаем все объекты Location для данной марсианской станции
+    locations = Location.objects.filter(id_mars_station=pk_mars_station).order_by('sequence_number')
+    locations = list(locations)
 
+    # Определяем индекс текущего объекта в списке
+    current_index = locations.index(location)
+
+    # Определяем новый индекс в зависимости от направления
+    new_index = current_index - 1 if direction == 'up' else current_index + 1
+
+    # Проверяем, не выходит ли новый индекс за границы списка
+    if 0 <= new_index < len(locations):
+        # Меняем значения sequence_number для текущего и нового объекта
+        current_sequence_number = location.sequence_number
+        new_sequence_number = locations[new_index].sequence_number
+
+        location.sequence_number = new_sequence_number
+        locations[new_index].sequence_number = current_sequence_number
+
+        # Сохраняем объекты Location
+        location.save()
+        locations[new_index].save()
+
+        # Получаем все объекты Location для данной марсианской станции
+        locations = Location.objects.filter(id_mars_station=pk_mars_station)
+        locations_serializer = LocationSerializer(locations, many=True)
+
+        geographical_objects_data = []
+        for location in locations:
+            geographical_object = location.id_geographical_object
+            geographical_object_serializer = GeographicalObjectSerializer(geographical_object)
+            geographical_objects_data.append(geographical_object_serializer.data)
+
+        return Response(data={'message': 'Successfully deleted', 'location': locations_serializer.data,
+                              'geographical_object': geographical_objects_data}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': 'Invalid move request'}, status=status.HTTP_400_BAD_REQUEST)
 
 # Удаляет марсианскую станцию по ID
 @api_view(['DELETE'])
-@permission_classes([IsModerator])
+@permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def DELETE_Location(request, pk, format=None):
+def DELETE_Location(request, pk_location, pk_mars_station, format=None):
     print('[INFO] API DELETE [DELETE_Location]')
-    location = get_object_or_404(Location, pk=pk)
-
-    # Удаляет связанную марсианскую станцию
-    location.id_mars_station.delete()
-    # Затем удалим сам объект Location
+    # Удаляем объект Location
+    location = get_object_or_404(Location, pk=pk_location)
+    # Удаляет объект Location
     location.delete()
+    # Получаем все объекты Location для данной марсианской станции
+    locations = Location.objects.filter(id_mars_station=pk_mars_station)
+    locations_serializer = LocationSerializer(locations, many=True)
 
-    return Response({'message': 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
+    geographical_objects_data = []
+    for location in locations:
+        geographical_object = location.id_geographical_object
+        geographical_object_serializer = GeographicalObjectSerializer(geographical_object)
+        geographical_objects_data.append(geographical_object_serializer.data)
+
+    return Response(data={'message': 'Successfully deleted', 'location': locations_serializer.data, 'geographical_object': geographical_objects_data}, status=status.HTTP_200_OK)
 
 
 # ==================================================================================
