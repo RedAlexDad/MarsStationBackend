@@ -2,6 +2,7 @@ from rest_framework.permissions import BasePermission
 from bmstu_lab.models import Users
 
 from django.conf import settings
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -107,13 +108,11 @@ def get_access_token(request):
     access_token = None
 
     if access_token is None:
-        access_token = request.headers.get("authorization")
-        if access_token == 'undefined':
-            access_token = None
-    elif access_token is None:
-        access_token = request.COOKIES.get('access_token')
-    else:
-        access_token = request.data.get('access_token')
+        access_token = request.COOKIES.get('access_token', None)
+    if access_token is None:
+        access_token = request.data.get('access_token', None)
+    if access_token is None:
+        access_token = request.headers.get("authorization", None)
 
     # Получение имени пользователя из Redis по токену
     try:
@@ -177,10 +176,16 @@ class IsModerator(BasePermission):
             print(error)
             return False
 
-        try:
-            user = Users.objects.get(pk=payload["id"])
-        except Exception as error:
-            print(error)
-            return False
+        # Попытка получения данных из кэша
+        user = cache.get(f'user_{payload["id"]}')
+
+        if user is None:
+            # Если в кэше нет данных, получаем из базы и кэшируем
+            try:
+                user = Users.objects.get(pk=payload["id"])
+                cache.set(f'user_{payload["id"]}', user)
+            except Exception as error:
+                print(error)
+                return False
 
         return user.is_moderator

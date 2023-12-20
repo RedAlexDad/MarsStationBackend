@@ -21,6 +21,11 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'password', 'is_moderator']
 
 
+class UsersSerializerInfo(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = ['id', 'username', 'is_moderator']
+
 # Для аутенфикации, авторизации и регистрации
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -97,25 +102,24 @@ class TypeTransportSerializerID_TYPE(serializers.ModelSerializer):
 
 
 class MarsStationSerializer(serializers.ModelSerializer):
+    status_task = serializers.CharField()  # Используйте CharField
+    status_mission = serializers.CharField()
+
     class Meta:
         model = MarsStation
         fields = '__all__'
 
 
 class MarsStationSerializerDetail(serializers.ModelSerializer):
-    employee = EmployeeSerializer(required=False)
-    moderator = EmployeeSerializer(required=False)
-    transport = TransportSerializer(required=False)
-    location = LocationSerializer(required=False, many=True)
-    geographical_object = GeographicalObjectSerializer(required=False, many=True)
+    id_employee = EmployeeSerializer()
+    id_moderator = EmployeeSerializer()
+    id_transport = TransportSerializer()
 
     class Meta:
         model = MarsStation
         fields = '__all__'
 
+
 class GeograficalObjectAndTransports(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
-
-
-
