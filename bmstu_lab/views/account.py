@@ -1,23 +1,17 @@
-import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
 
-from django.core.cache import cache
-from django.contrib.auth import authenticate, login, logout
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.decorators import authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, BasePermission
-from django.conf import settings
-from bmstu_lab.permissions import IsModerator, IsAuthenticated, create_access_token, create_refresh_token, \
-    get_jwt_payload, get_access_token, get_refresh_token, add_in_blacklist
+from rest_framework.permissions import AllowAny
+from bmstu_lab.permissions import IsModerator, IsAuthenticated, create_access_token, \
+    get_jwt_payload, get_access_token, add_in_blacklist
 
 from bmstu_lab.serializers import UsersSerializer, UserRegisterSerializer, UserAuthorizationSerializer, \
-    EmployeeSerializer
+    EmployeeSerializer, UsersSerializerInfo
 from bmstu_lab.models import Users, Employee
-import jwt, datetime
 
 # ==================================================================================
 # АККАУНТЫ
@@ -123,29 +117,20 @@ class RegisterView(APIView):
 
     @swagger_auto_schema(request_body=UserRegisterSerializer)
     def post(self, request):
-        user_data = {
-            "username": request.data['username'],
-            "password": request.data['password'],
-            "is_moderator": request.data.get('is_moderator', False),
-        }
         try:
-            user_serializer = UserRegisterSerializer(data=user_data)
-            user_serializer.is_valid(raise_exception=True)
-            user_instance = user_serializer.save()
-            id_user = user_instance.id
-
-            employee_data = {
-                "full_name": request.data['full_name'],
-                "post": request.data['post'],
-                "name_organization": request.data['name_organization'],
-                "address": request.data['address'],
-                "id_user": id_user
-            }
             try:
-                employee_serializer = EmployeeSerializer(data=employee_data)
+                user_serializer = UserRegisterSerializer(data=request.data['user'])
+                user_serializer.is_valid(raise_exception=True)
+                user_instance = user_serializer.save()
+                id_user = user_instance.id
+            except AssertionError as error:
+                return Response(data={"message": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                employee_data = request.data['employee']
+                employee_data['id_user'] = id_user
+                employee_serializer = EmployeeSerializer(data=request.data['employee'])
                 employee_serializer.is_valid(raise_exception=True)
                 employee_serializer.save()
-
                 return Response(data={"user": user_serializer.data, "employee": employee_serializer.data},
                                 status=status.HTTP_200_OK)
             except AssertionError as error:
@@ -161,37 +146,30 @@ class LoginView(APIView):
 
     @swagger_auto_schema(request_body=UserAuthorizationSerializer)
     def post(self, request):
-        user_serializer = UserAuthorizationSerializer(data=request.data)
-
-        if not user_serializer.is_valid():
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_serializer = UserAuthorizationSerializer(data=request.data)
+            if not user_serializer.is_valid():
+                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except AssertionError as error:
+            return Response(data={"message": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(**user_serializer.data)
         if user is None:
-            return Response({'message': 'Такого аккаунта не найдены. Вы неверно ввели свои учетные данные'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'Такого аккаунта не найдены. Вы неверно ввели свои учетные данные'},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
         error_message, access_token = create_access_token(user)
         employee = Employee.objects.get(id_user=user.id)
+        employee_serializer = EmployeeSerializer(employee, many=False)
 
         response = Response(status=status.HTTP_200_OK)
         response.set_cookie(key='access_token', value=access_token, httponly=True)
         response.data = {
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'is_moderator': user.is_moderator
-            },
-            'employee': {
-                'id': employee.id,
-                'name': employee.full_name,
-                'post': employee.post,
-                'name_organization': employee.name_organization,
-                'address': employee.address
-            },
+            'user': user_serializer.data,
+            'employee': employee_serializer.data,
             'message': 'Успешно',
             'access_token': access_token,
         }
-
         # Добавляем error_message, если есть ошибка
         if error_message:
             response.data['error_message'] = error_message
@@ -214,18 +192,8 @@ class GetToken(APIView):
         employee = Employee.objects.get(id_user=user.id)
 
         data = {
-            'user_data': {
-                'id': user.id,
-                'username': user.username,
-                'is_moderator': user.is_moderator
-            },
-            'employee': {
-                'id': employee.id,
-                'name': employee.full_name,
-                'post': employee.post,
-                'name_organization': employee.name_organization,
-                'address': employee.address
-            },
+            'user': UsersSerializerInfo(user, many=False).data,
+            'employee': EmployeeSerializer(employee, many=False).data,
             'message': 'Успешно',
             'access_token': access_token,
         }
@@ -245,8 +213,9 @@ class LogoutView(APIView):
 
         # Проверка наличия токена
         if access_token is None:
-            return Response({'message': 'Токен в access_token и cookie не найден. Скорее всего вы уже вышли из системы?'},
-                            status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'message': 'Токен в access_token и cookie не найден. Скорее всего вы уже вышли из системы?'},
+                status=status.HTTP_401_UNAUTHORIZED)
 
         # Добавление токена в черный список в Redis
         error_message, token_exists = add_in_blacklist(access_token)

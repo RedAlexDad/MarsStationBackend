@@ -18,32 +18,10 @@ import io
 
 class DB_Minio():
     def __init__(self):
-        # Команда для запуска MinIO сервера
-        # minio_server_command = "minio server ~/minio --console-address :9090"
-        # Нужно дать несколько времени для соединения
-        # time.sleep(3)
-        # Запуск команды
-        # try:
-        #     subprocess.Popen(minio_server_command, shell=True)
-        # except Exception as ex:
-        #     print(f'[ERROR] Не удалось запустить MinIO сервер. \n{ex}')
-        #
-        # addresses = ["192.168.1.53", "172.17.0.1", "127.0.0.1"]
-
-        # for address in addresses:
-        #     try:
-        #         response = requests.get(f"http://{address}:9090")
-        #         if response.status_code == 200:
-        #             endpoint = address
-        #             break
-        #     except Exception as ex:
-        #         print(f'[ERROR] Не удалось получить адрес MinIO сервера {address}. \n{ex}')
-
         try:
             # Установка соединения
             self.client = Minio(
                 # адрес сервера
-                # endpoint=endpoint+':9000',
                 endpoint="127.0.0.1:9000",
                 # логин админа
                 access_key='minioadmin',
