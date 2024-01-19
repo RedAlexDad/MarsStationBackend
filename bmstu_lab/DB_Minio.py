@@ -18,35 +18,11 @@ import io
 
 class DB_Minio():
     def __init__(self):
-        # Команда для запуска MinIO сервера
-        # minio_server_command = "minio server ~/minio --console-address :9090"
-        # Нужно дать несколько времени для соединения
-        # time.sleep(3)
-        # Запуск команды
-        # try:
-        #     subprocess.Popen(minio_server_command, shell=True)
-        # except Exception as ex:
-        #     print(f'[ERROR] Не удалось запустить MinIO сервер. \n{ex}')
-        #
-        # addresses = ["192.168.1.53", "172.17.0.1", "127.0.0.1"]
-
-        # for address in addresses:
-        #     try:
-        #         response = requests.get(f"http://{address}:9090")
-        #         if response.status_code == 200:
-        #             endpoint = address
-        #             break
-        #     except Exception as ex:
-        #         print(f'[ERROR] Не удалось получить адрес MinIO сервера {address}. \n{ex}')
-
         try:
             # Установка соединения
             self.client = Minio(
                 # адрес сервера
-                # endpoint=endpoint+':9000',
-                endpoint="192.168.1.53:9000",
-                # endpoint="127.0.0.1:9000",
-                # endpoint="127.0.0.1:8000",
+                endpoint="127.0.0.1:9000",
                 # логин админа
                 access_key='minioadmin',
                 # пароль админа
@@ -153,7 +129,17 @@ class DB_Minio():
             # print(url)
             return url
         except Exception as ex:
-            print(f'[ERROR] Не удалось получить данные о объектах. \n{ex}')
+            print(f'[ERROR] Не удалось получить данные. \n{ex}')
+
+    def get_object(self, bucket_name: str, object_name: str):
+        try:
+            object_data = self.client.get_object(
+                bucket_name=bucket_name,
+                object_name=object_name,
+            )
+            return object_data.read()
+        except Exception as ex:
+            print(f'[ERROR] Не удалось получить данные. \n{ex}')
 
     # Вставляет картинки в бакет с ссылки внешних источников
     # https://min.io/docs/minio/linux/developers/python/API.html#put_object
@@ -176,10 +162,3 @@ class DB_Minio():
                 print(f'[ERROR] Не удалось получить данные по URL. Код статуса: {response.status_code}')
         except Exception as ex:
             print(f'[ERROR] Не удалось загрузить объект из URL в хранилище. \n{ex}')
-
-# DB = DB_Minio()
-# DB.check_bucket_exists(bucket_name='test')
-# DB.stat_object(bucket_name='mars', object_name='Farsida.jpg')
-# DB.list_objects(bucket_name='mars')
-# DB.get_presigned_url(method='GET', bucket_name='mars', object_name='Acidalia Planitia.jpg')
-# DB.put_object_url(bucket_name='mars', object_name='test_mars.jpg', url='https://kartinkof.club/uploads/posts/2022-09/1662472162_1-kartinkof-club-p-novie-i-krasivie-kartinki-mars-1.jpg')
