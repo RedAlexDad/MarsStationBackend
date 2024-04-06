@@ -1,0 +1,384 @@
+{
+	"info": {
+		"_postman_id": "20f3003b-857c-4ebc-b301-63dfa5962192",
+		"name": "Географический объект API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18885022"
+	},
+	"item": [
+		{
+			"name": "Получить все данные по пагинации",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMDA3MTg5LCJpYXQiOjE3MDI5MjA3ODksImlkIjo4fQ.PkYe1G0QLRnS3Eu-d1uF4r_jG1gXlkkrdqv7PY0kGlE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/?page=3&count_item=25",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						""
+					],
+					"query": [
+						{
+							"key": "size",
+							"value": "5100",
+							"disabled": true
+						},
+						{
+							"key": "describe",
+							"value": "обширная тёмная",
+							"disabled": true
+						},
+						{
+							"key": "status",
+							"value": "True",
+							"disabled": true
+						},
+						{
+							"key": "perPage",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "type",
+							"value": "testoter",
+							"disabled": true
+						},
+						{
+							"key": "feature",
+							"value": "Alb",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "3"
+						},
+						{
+							"key": "count_item",
+							"value": "25"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получить данные по ID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/1/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получить изображение",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMDEwNzc3LCJpYXQiOjE3MDI5MjQzNzcsImlkIjo0fQ.99sCi9mvsp1132lwze_8W1MzO9zR-0eL0_PLe1D-fQU",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/5/image/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"5",
+						"image",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Удалить объект по ID",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMDAwNTk5LCJpYXQiOjE3MDI5MTQxOTksImlkIjozfQ.oucb8SDgLn1OGFKHDiGg-LUuGpiPFXQx6ZJ0u6XS7do",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/29/delete/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"29",
+						"delete",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить объект",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMTQwNzg1LCJpYXQiOjE3MDMwNTQzODUsImlkIjozfQ.F2R4gJWv7WNGj4faYe3lwBL4XnYaurPf_1zrRVc1AxI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"feature\": \"rocket\",\n    \"type\": \"testoter\",\n    \"size\": 1234,\n    \"describe\": \"testirovanie\",\n    \"status\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/create/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"create",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить объект в заявку",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMDgwMzQ4LCJpYXQiOjE3MDI5OTM5NDgsImlkIjoxfQ.CA8oyA-rBIAF0l4J5y0XKMCF0imPivK8C-dsduG4AUs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/1/create_service_in_task/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"1",
+						"create_service_in_task",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Обновить данные",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMTQwNzg1LCJpYXQiOjE3MDMwNTQzODUsImlkIjozfQ.F2R4gJWv7WNGj4faYe3lwBL4XnYaurPf_1zrRVc1AxI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"feature\": \"Acidalia Planitia\",\n    \"type\": \"Planitia, planitiae\",\n    \"size\": 2300,\n    \"describe\": \"обширная тёмная равнина на Марсе. Размер — около 3 тысяч км, координаты центра — 50° с. ш. 339°. Расположена между вулканическим регионом Тарсис и Землёй Аравия, к северо-востоку от долин Маринера. На севере переходит в Великую Северную равнину, на юге — в равнину Хриса; на восточном краю равнины находится регион Кидония. Диаметр около 3000 км.\",\n    \"photo\": \"\",\n    \"status\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/1/update/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"1",
+						"update",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить изображение",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMDE0OTI1LCJpYXQiOjE3MDI5Mjg1MjUsImlkIjo0fQ.SwZunbQFQLNvSpXy0IgAPn9BQcaibCXIbkuMW3njWRE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "photo",
+							"type": "file",
+							"src": "/home/redalexdad/Загрузки/NewPlanet.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/geographical_object/153/update_image/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"153",
+						"update_image",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,76 @@
+{
+	"info": {
+		"_postman_id": "c40746ef-2cef-4f2f-9738-00eb826ffd49",
+		"name": "Асинхронный веб-сервис",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18885022"
+	},
+	"item": [
+		{
+			"name": "Генерация случайных событий",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id_draft\": 12\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8100/api/async_calc/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8100",
+					"path": [
+						"api",
+						"async_calc",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получение результата",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id_draft\": 12,\n    \"status_mission\": 3,\n    \"token\": \"my_secret_token\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/async_result/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"async_result",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

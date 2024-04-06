@@ -1,0 +1,341 @@
+{
+	"info": {
+		"_postman_id": "a2209376-dc0c-4338-bf94-00e06209fd8b",
+		"name": "Марсианские станции API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18885022"
+	},
+	"item": [
+		{
+			"name": "Получить все данные и по фильтрации",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMzU2NzA3LCJpYXQiOjE3MDMyNzAzMDcsImlkIjoxfQ.E6gwH4zWZxRhvA1JxoGG4IqWct4_fKuBresxai-pGC4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						""
+					],
+					"query": [
+						{
+							"key": "status_task",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "type_status",
+							"value": "Коммерческая",
+							"disabled": true
+						},
+						{
+							"key": "status_mission",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "date_create",
+							"value": "1988-03-18",
+							"disabled": true
+						},
+						{
+							"key": "date_close",
+							"value": "1990-05-07",
+							"disabled": true
+						},
+						{
+							"key": "date_form_before",
+							"value": "2023-12-01",
+							"disabled": true
+						},
+						{
+							"key": "date_form_after",
+							"value": "2023-11-31",
+							"disabled": true
+						},
+						{
+							"key": "type_transport",
+							"value": "Spacecraft",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получить данные по ID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMzU2NzA3LCJpYXQiOjE3MDMyNzAzMDcsImlkIjoxfQ.E6gwH4zWZxRhvA1JxoGG4IqWct4_fKuBresxai-pGC4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/55/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"55",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Удалить объект по ID",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAyNTQxMDk0LCJpYXQiOjE3MDI0NTQ2OTQsImlkIjoxfQ.aB3V8LHuQunOd8xl9k1POqHpxH7XooZIiYO2SdMtJO4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/87/delete/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"87",
+						"delete",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Обновить данные по ID",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMzU2NzA3LCJpYXQiOjE3MDMyNzAzMDcsImlkIjoxfQ.E6gwH4zWZxRhvA1JxoGG4IqWct4_fKuBresxai-pGC4",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_status\": \"Исследовательская работа\",\n    \"date_create\": \"2023-11-21\",\n    \"date_form\": null,\n    \"date_close\": null,\n    \"status_task\": 1,\n    \"status_mission\": 3,\n    \"id_employee\": 1,\n    \"id_moderator\": null,\n    \"id_transport\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/7/update/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"7",
+						"update",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Обновить статус пользователем",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzMTg3NjAyLCJpYXQiOjE3MDMxMDEyMDIsImlkIjoxfQ.4LHpiQK0oiXb8dObjnsGj_lyCdz4LU7JF7l_4K1Hj0g",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/57/update_by_user/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"57",
+						"update_by_user",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Обновить статус модератором",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAxMzUyODA0LCJpYXQiOjE3MDEyNjY0MDQsImlkIjo3fQ.Ei3CEOVkEv7OGgRc4vGT7qxiIkdB-rEQH3w_TwRZ4co",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status_task\": 4\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/56/update_by_admin/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"56",
+						"update_by_admin",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить объект",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_status\": \"Исследовательская\",\n    \"data_create\": \"1972-09-01\",\n    \"data_from\": \"1973-11-04\",\n    \"data_close\": \"1975-05-08\",\n    \"status_task\": 1,\n    \"status_mission\": 3,\n    \"id_employee\": 1,\n    \"id_transport\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/mars_station/create/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"mars_station",
+						"create",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

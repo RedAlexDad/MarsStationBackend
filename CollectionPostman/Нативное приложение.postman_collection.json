@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "144e59c0-4406-49b8-82e6-7f7082c827e7",
+		"name": "Нативное приложение",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18885022"
+	},
+	"item": [
+		{
+			"name": "Географический объект",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.142.141:8000/api/geographical_object/1/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"142",
+						"141"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить географический объект",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"feature\": \"Test111\",\n    \"type\": \"testoter\",\n    \"size\": 1234,\n    \"describe\": \"testirovanie\",\n    \"status\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.53:8000/api/geographical_object/create/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"53"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						"create",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Список географических объектов Copy",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.108.141:8000/api/geographical_object/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"108",
+						"141"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"geographical_object",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
